@@ -1,0 +1,26 @@
+'use strict';
+const assert=require('node:assert/strict');
+const sdk=require('./sto-sdk-garage.js');
+// Artificial fixture, not the user's garage values or a suggested setup.
+const snapshot={schemaVersion:1,source:'iRacing SDK sessionInfo.CarSetup',observed_at_utc:'2026-10-17T01:00:00+02:00',car:{CarPath:'stockcars toyotacamry2022',CarScreenName:'Synthetic Camry'},track:'synthetic',setup:{UpdateCount:'1',Tires:{LeftFront:{ColdPressure:'100 kPa',LastTempsOMI:'1C, 2C, 3C'},RightFront:{ColdPressure:'200 kPa',LastTempsIMO:'4C, 5C, 6C'},LeftRear:{ColdPressure:'300 kPa'},RightRear:{ColdPressure:'400 kPa'}},Chassis:{Front:{NoseWeight:'49.0%',CrossWeight:'52.0%'},FrontArb:{Attach:'1'},LeftFront:{CornerWeight:'1000 N',Camber:'+1 deg',Caster:'+2 deg'},RightFront:{CornerWeight:'2000 N',Camber:'-3 deg'},LeftRear:{CornerWeight:'3000 N'},RightRear:{CornerWeight:'4000 N',RideHeight:'50 mm'},Rear:{FinalDriveRatio:' 3.000 ',Attach:'0'}}}};
+const tires=sdk.plan(snapshot,'tires');
+assert.deepEqual(tires.sections.map(s=>s.key),['lf','rf','lr','rr']);
+assert.deepEqual(tires.sections.map(s=>s.rows[0].value),['100 kPa','200 kPa','300 kPa','400 kPa']);
+assert.equal(tires.sections[0].rows[1].label,'Last temperatures (O / M / I)');
+assert.equal(tires.sections[1].rows[1].label,'Last temperatures (I / M / O)');
+const chassis=sdk.plan(snapshot,'chassis');
+assert.deepEqual(chassis.sections.map(s=>s.key),['front','front-arb','lf','rf','lr','rr','rear']);
+assert.equal(chassis.sections[4].rows.some(r=>r.path.endsWith('RideHeight')),false);
+assert.equal(chassis.sections[5].rows.find(r=>r.path.endsWith('RideHeight')).value,'50 mm');
+assert.equal(chassis.sections[6].rows[0].value,' 3.000 ');
+assert.equal(chassis.sections[1].rows[0].kind,'check');
+assert.equal(chassis.sections[6].rows[0].control,'drop');
+assert.equal(tires.sections[0].rows[0].control,'spin');
+assert.equal(chassis.sections[2].rows[0].control,'none');
+assert.equal(chassis.complete,false);
+for(const change of [{source:'STO'},{car:{CarPath:'other'}},{track:{}},{session_info_update:-1},{observed_at_utc:'invalid'},{setup:{Tires:[],Chassis:{}}}])assert.throws(()=>sdk.plan({...snapshot,...change}));
+const future=structuredClone(snapshot);future.setup.Chassis.Extra={NewField:'<img>'};
+assert.equal(sdk.plan(future).sections.at(-1).rows[0].value,'<img>');
+assert.equal(JSON.stringify(snapshot).includes('state.a'),false);
+assert.throws(()=>sdk.plan(snapshot,'unknown'));
+console.log('PASS SDK snapshot exact sections/positions, OMI/IMO distinction, existing output strings, unknown-field preservation and identity/bounds; synthetic only');
