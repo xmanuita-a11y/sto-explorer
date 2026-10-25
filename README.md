@@ -1,5 +1,7 @@
 # STO Explorer
 
+**Italiano** | [English](README.en.md)
+
 Offline viewer for iRacing setups — experimental demo, currently optimized for NASCAR Next Gen.
 
 STO Explorer è un viewer indipendente per esplorare file setup `.sto` di iRacing e confrontare due configurazioni. L'interfaccia riproduce l'ambiente del garage, con supporto attualmente concentrato sulle NASCAR Next Gen e in particolare sulla Toyota Camry.
