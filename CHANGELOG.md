@@ -12,6 +12,7 @@ Pre-release versions remain experimental and do not imply simulator compatibilit
 - Local import of the observed iRacing HTML setup-export format, retaining document labels, ordered values and notes.
 - Separate views for SDK snapshots from other models without inheriting Camry control semantics.
 - Setup search, difference filtering, swap, reset and comparison summaries in the Garage sidebar.
+- Public build verification on Linux and Windows with pinned Actions and read-only workflow permissions.
 
 ### Fixed
 

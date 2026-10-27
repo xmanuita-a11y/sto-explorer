@@ -1,0 +1,79 @@
+name: Build verification
+
+on:
+  push:
+    branches: [main, release/garage-portfolio]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  standalone:
+    name: Standalone HTML (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out public sources
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - name: Check Python syntax and public file boundary
+        run: |
+          python - <<'PY'
+          import ast
+          from pathlib import Path
+          import re
+          import subprocess
+
+          files = subprocess.check_output(['git', 'ls-files', '-z']).decode().split('\0')
+          private_names = re.compile(r'(^|/)(test[^/]*|[^/]*fixture[^/]*|private-reference|tmp)(/|$)', re.I)
+          private_path = re.compile(r'[A-Za-z]:[\\/]+[Uu]sers[\\/]|/[U]sers/')
+          for name in filter(None, files):
+              path = Path(name)
+              assert not private_names.search(name), 'Private verification/data file is tracked'
+              assert path.suffix.lower() not in {'.sto', '.rpy', '.dmp', '.log'}, 'Private artifact is tracked'
+              text = path.read_text(encoding='utf-8')
+              assert not private_path.search(text), 'Workstation path found in public source'
+              if path.suffix == '.py':
+                  ast.parse(text, filename=name)
+          print('Public source boundary and Python syntax verified.')
+          PY
+      - name: Build standalone HTML
+        run: python build_sto_reader.py
+      - name: Check JavaScript syntax
+        run: |
+          node - <<'JS'
+          const fs = require('node:fs');
+          const vm = require('node:vm');
+          for (const file of fs.readdirSync('.').filter(name => name.endsWith('.js'))) {
+            new vm.Script(fs.readFileSync(file, 'utf8'), { filename: file });
+          }
+          const html = fs.readFileSync('STO_Reader_Offline.html', 'utf8');
+          for (const match of html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)) {
+            new vm.Script(match[1], { filename: 'STO_Reader_Offline.html' });
+          }
+          console.log('Public JavaScript and standalone inline syntax verified.');
+          JS
+      - name: Verify generated HTML is current
+        run: git diff --exit-code -- STO_Reader_Offline.html
