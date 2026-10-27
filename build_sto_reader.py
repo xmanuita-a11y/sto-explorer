@@ -53,6 +53,12 @@ if garage_demo.get('synthetic') is not True:
     raise ValueError('Synthetic garage demo missing')
 if demo.get('synthetic') is not True or len(demo.get('samples',[])) != 2:
     raise ValueError('Synthetic demo missing')
+models = demo.get('models', [])
+if len(models) != 3 or len({model.get('id') for model in models}) != len(models):
+    raise ValueError('Three distinct synthetic model demos are required')
+for model in models:
+    if model.get('synthetic') is not True or len(model.get('samples', [])) != 2:
+        raise ValueError('Invalid synthetic model comparison')
 output = template.rsplit('</html>', 1)[0] + '<script>\n' + i18n + '\n' + core + '\n' + presentation + '\n' + garage + '\n' + native + '\nconst STO_NATIVE_GARAGE_CATALOG = '+native_catalog_js+';\nconst MATERIAL = ' + json.dumps(material) + ';\nconst STO_DEMO = '+json.dumps(demo)+';\nconst STO_GARAGE_DEMO = '+json.dumps(garage_demo)+';\n' + ui + '\n</script></html>\n'
 if any(marker in output for marker in ('CORE_PLACEHOLDER', 'PRESENTATION_PLACEHOLDER', 'MATERIAL_PLACEHOLDER')):
     raise ValueError('Build incompleta: placeholder residui')
