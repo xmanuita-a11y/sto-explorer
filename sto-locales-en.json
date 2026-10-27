@@ -403,5 +403,6 @@
   "Export HTML separato dai file STO · etichette e valori originali.": "HTML export kept separate from STO files · original labels and values.",
   "Fonte: export HTML iRacing · etichette, ordine e valori del file · nessuna associazione automatica allo STO.": "Source: iRacing HTML export · labels, order and values from the file · no automatic STO association.",
   "Export troppo grande: limite 1 MiB.": "Export too large: 1 MiB limit.",
-  "Impossibile importare export HTML: {error}": "Cannot import HTML export: {error}"
+  "Impossibile importare export HTML: {error}": "Cannot import HTML export: {error}",
+  "Contenuto STO oltre i limiti di complessità supportati.": "STO content exceeds the supported complexity limits."
 }

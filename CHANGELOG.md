@@ -21,6 +21,7 @@ Pre-release versions remain experimental and do not imply simulator compatibilit
 - Preserve earlier SDK captures by creating a new output directory for every acquisition.
 - Show load and comparison warnings outside the collapsed reader panel.
 - Keep model navigation compact without overlapping the setup caption.
+- Bound decoded text, line counts, parameter counts and numeric-token length before rendering.
 
 ### Validation
 

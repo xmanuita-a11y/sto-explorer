@@ -1,5 +1,7 @@
 /* Offline STO v3 reader. No network, simulator or file-writing API. */
 const StoReader = (() => {
+  const limits=Object.freeze({text:1024*1024,lines:16384,line:4096,entries:4096,numeric:128});
+  const complexityError=()=>{throw new Error('Contenuto STO oltre i limiti di complessità supportati.');};
   const fromHex = text => Uint8Array.from(text.match(/../g), x => parseInt(x, 16));
   const hex = bytes => Array.from(bytes, x => x.toString(16).padStart(2, '0')).join('');
   // WebCrypto removes PKCS#7 automatically. Append one synthetic CBC block
@@ -20,10 +22,15 @@ const StoReader = (() => {
     return sign + whole + (fraction ? '.' + fraction : '');
   }
   function parse(text) {
+    if(typeof text!=='string'||text.length>limits.text)complexityError();
+    const lines=text.split(/\r?\n/);
+    if(lines.length>limits.lines)complexityError();
     const entries = [], unparsed = [], counts = new Map();
-    text.split(/\r?\n/).forEach((line, index) => {
+    lines.forEach((line, index) => {
+      if(line.length>limits.line)complexityError();
       const match = line.match(/^\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+))\s+([A-Za-z_][A-Za-z_0-9]*)\s+!\s*$/);
       if (match) {
+        if(entries.length>=limits.entries||match[1].length>limits.numeric)complexityError();
         const occurrence = (counts.get(match[2]) || 0) + 1; counts.set(match[2], occurrence);
         entries.push({name:match[2], occurrence, id:match[2]+'#'+occurrence, value:match[1], line:index+1});
       } else if (line.trim() && !line.trim().startsWith('//')) unparsed.push({line:index+1, text:line});
@@ -59,6 +66,6 @@ const StoReader = (() => {
       return {id, name:(x||y).name, occurrence:(x||y).occurrence, a:x, b:y, status:!b?'single':!x?'only-b':!y?'only-a':canonicalDecimal(x.value)===canonicalDecimal(y.value)?'same':'changed'};
     });
   }
-  return {decode, parse, compare, canonicalDecimal};
+  return {decode, parse, compare, canonicalDecimal, limits};
 })();
 if (typeof module !== 'undefined') module.exports = StoReader;
