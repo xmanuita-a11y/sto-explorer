@@ -14,7 +14,9 @@ This is an independent project, not affiliated with, endorsed by or supported by
 
 1. Download [STO_Reader_Offline.html](STO_Reader_Offline.html) using GitHub's **Download raw file** action.
 2. Open it in a current Chrome, Edge or Firefox browser.
-3. Load one or two files you are authorized to use, or open **Compare and offline tools → DEMO · SYNTHETIC**.
+3. Choose **Synthetic demo → Open demo comparison** at the top of the Garage, or load one or two files you are authorized to use.
+
+The Camry NextGen, Acura GTP and Ferrari GT3 examples use invented values and one deliberate A/B pressure difference. They demonstrate the viewer and are not usable or recommended simulator setups.
 
 No installation, server, account, network connection or running simulator is required for the viewer. Selected files are processed locally; the app does not upload them or modify the original setups.
 
@@ -50,7 +52,7 @@ Requires Python 3.10 or later. No pip or npm packages are needed.
 python build_sto_reader.py
 ```
 
-The build embeds the reviewed sources, catalogs and synthetic demo data into the standalone HTML. The public workflow verifies the build and source syntax on Linux and Windows. Tests, development fixtures, local audit reports and session data are intentionally kept outside the public repository.
+The build embeds the reviewed sources, catalogs and synthetic demo data into the standalone HTML. The public workflow verifies the build, source syntax and synthetic demo decoding, hashes, ordered field identities and exact A/B differences on Linux and Windows. Tests, development fixtures, local audit reports and session data are intentionally kept outside the public repository.
 
 ## Optional SDK capture
 

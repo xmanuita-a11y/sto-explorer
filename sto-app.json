@@ -1,6 +1,6 @@
 {
   "name": "STO Explorer",
-  "version": "1.0.0-rc.2",
+  "version": "1.0.0-rc.3",
   "supported_sto_headers": [
     3
   ],

@@ -298,8 +298,8 @@ function render(){
   const completeRows=allRows(),counts={};completeRows.forEach(r=>counts[r.status]=(counts[r.status]||0)+1);
   renderOverview(completeRows,counts);
   syncGaragePages();
-  const rows=visibleRows();$('rows').replaceChildren();let currentGroup;
-  for(const r of rows){
+  const rows=visibleRows(),tableView=$('view').value!=='garage';$('rows').replaceChildren();let currentGroup;
+  if(tableView)for(const r of rows){
     const d=r.description;
     if(($('sort').value||'group')==='group'&&currentGroup!==d.group){const header=document.createElement('tr');header.className='group-row';const td=cell(header,T(d.group));td.colSpan=5;$('rows').append(header);currentGroup=d.group;}
     const tr=document.createElement('tr');tr.className=r.status;
@@ -310,7 +310,7 @@ function render(){
     const diffCell=cell(tr,'','value');block(diffCell,delta.primary,'primary');if(r.status==='changed')block(diffCell,delta.detail,'technical');diffCell.title=delta.detail;
     cell(tr,T(labels[r.status]),'badge');$('rows').append(tr);
   }
-  if(!rows.length){const tr=document.createElement('tr');const td=cell(tr,T(state.a||state.b?'Nessun parametro corrisponde ai filtri.':'Apri un setup per esplorare i suoi valori.'),'empty');td.colSpan=5;$('rows').append(tr);}
+  if(tableView&&!rows.length){const tr=document.createElement('tr');const td=cell(tr,T(state.a||state.b?'Nessun parametro corrisponde ai filtri.':'Apri un setup per esplorare i suoi valori.'),'empty');td.colSpan=5;$('rows').append(tr);}
   $('tablebox').hidden=$('view').value==='garage';$('garage-grid').hidden=$('view').value!=='garage';
   if($('view').value==='garage')renderGarage(rows);else {$('garage-grid').replaceChildren();$('garage-notes-content').hidden=true;$('garage-tools').hidden=true;}
   $('stats').textContent=state.a&&state.b?T('{changed} diversi · {a} solo in A · {b} solo in B · {same} uguali · {visible} visibili',{changed:counts.changed||0,a:counts['only-a']||0,b:counts['only-b']||0,same:counts.same||0,visible:rows.length}):state.a||state.b?T('{n} parametri visibili',{n:rows.length}):T('Apri un setup per iniziare.');
@@ -335,6 +335,13 @@ async function load(side,file){
   catch(error){if(ticket!==generation[side])return;errors[side]=true;messages[side]={key:'Impossibile aprire {name}\n{error}',args:{name:file.name,error:error.message}};render();}
 }
 const demoBytes=sample=>Uint8Array.from(atob(sample.base64),char=>char.charCodeAt(0));
+$('showcase-model').value='camry';
+$('showcase-load').addEventListener('click',async()=>{
+  const demo=STO_DEMO.models.find(model=>model.id===$('showcase-model').value);
+  if(!demo)return;
+  garagePage='all';$('view').value='garage';$('search').value='';$('group').value='';$('diff-only').checked=false;
+  await Promise.all(demo.samples.map((sample,i)=>load(i?'b':'a',{name:sample.name,size:demoBytes(sample).length,arrayBuffer:async()=>demoBytes(sample).buffer})));
+});
 $('check-browser').addEventListener('click',async()=>{
   $('check-browser').disabled=true;browserCheck={key:'Verifica in corso…'};render();
   try{
