@@ -75,5 +75,41 @@ jobs:
           }
           console.log('Public JavaScript and standalone inline syntax verified.');
           JS
+      - name: Verify synthetic model comparisons
+        run: |
+          node - <<'JS'
+          const assert=require('node:assert/strict');
+          const fs=require('node:fs');
+          const vm=require('node:vm');
+          const reader=require('./sto-reader-core.js');
+          const material=require('./sto-reader-material.json');
+          const demos=require('./sto-demo-data.json');
+          const catalog=require('./sto-model-group-catalog.json');
+          (async()=>{
+            assert.equal(demos.synthetic,true);
+            assert.equal(demos.models.length,3);
+            for(const demo of demos.models){
+              assert.equal(demo.synthetic,true);
+              const model=catalog.models.find(m=>m.car===demo.car&&m.contentVersion===demo.contentVersion);
+              const schema=model.schemas.find(s=>s.groupId===demo.groupId);
+              const decoded=[];
+              for(const sample of demo.samples){
+                const result=await reader.decode(Uint8Array.from(Buffer.from(sample.base64,'base64')),material);
+                assert.equal(result.decodedSha256,sample.decodedSha256);
+                assert.equal(result.car,demo.car);
+                assert.equal(result.entries.length,demo.expectedFields);
+                assert.deepEqual(result.entries.map(e=>e.id),schema.fields);
+                assert.match(result.notes,/SYNTHETIC DEMONSTRATION/);
+                decoded.push(result);
+              }
+              const changed=reader.compare(...decoded).filter(r=>r.status==='changed');
+              assert.equal(changed.length,1);
+              assert.equal(changed[0].id,demo.changedField);
+              assert.equal(BigInt(changed[0].b.value.split('.')[0])-BigInt(changed[0].a.value.split('.')[0]),BigInt(demo.expectedDelta));
+              assert.equal(reader.compare(decoded[1],decoded[0]).filter(r=>r.status==='changed').length,1);
+              console.log(demo.label+': decode, hashes, schema and exact A/B difference verified.');
+            }
+          })().catch(error=>{console.error(error);process.exitCode=1;});
+          JS
       - name: Verify generated HTML is current
         run: git diff --exit-code -- STO_Reader_Offline.html

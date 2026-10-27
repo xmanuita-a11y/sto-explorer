@@ -3,6 +3,18 @@
 Notable user-facing changes are recorded here in reverse chronological order.
 Pre-release versions remain experimental and do not imply simulator compatibility.
 
+## [1.0.0-rc.3] - 2026-10-27
+
+### Added
+
+- Direct Garage demo selector with synthetic Camry NextGen, Acura GTP and Ferrari GT3 A/B examples.
+- Public functional verification of demo decoding, content hashes, ordered model fields and exact comparison differences.
+- Explicit synthetic-value disclosures and bilingual instructions for trying the app without personal files.
+
+### Fixed
+
+- Build comparison table rows only when the table view is active; clear the hidden table when returning to Garage.
+
 ## [1.0.0-rc.2] - 2026-10-27
 
 ### Added

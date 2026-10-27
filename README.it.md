@@ -12,7 +12,7 @@ Progetto indipendente, non affiliato, approvato o supportato da iRacing. Nomi e 
 
 1. Scarica [STO_Reader_Offline.html](STO_Reader_Offline.html) con **Download raw file** su GitHub.
 2. Aprilo in una versione recente di Chrome, Edge o Firefox.
-3. Carica uno o due file che sei autorizzato a usare, oppure apri **Confronto e strumenti offline → DEMO · SYNTHETIC**.
+3. Scegli **Demo sintetica → Apri confronto demo** in cima al Garage, oppure carica uno o due file che sei autorizzato a usare.
 
 Il viewer non richiede installazione, server, account, connessione o simulatore aperto. Elabora i file nel browser senza caricarli su servizi remoti e senza modificare gli originali.
 
@@ -35,7 +35,7 @@ Richiede Python 3.10 o successivo, senza pacchetti pip o npm:
 python build_sto_reader.py
 ```
 
-La build incorpora sorgenti, cataloghi e demo sintetiche nell'HTML autonomo. Il workflow pubblico verifica build e sintassi su Linux e Windows. Test, fixture di sviluppo, report locali e dati di sessione rimangono privati e non sono distribuiti.
+La build incorpora sorgenti, cataloghi e demo sintetiche nell'HTML autonomo. Il workflow pubblico verifica build, sintassi, decodifica delle demo, hash, identità ordinata dei campi e differenze A/B esatte su Linux e Windows. Test, fixture di sviluppo, report locali e dati di sessione rimangono privati e non sono distribuiti.
 
 Il codice separa decoder, valori originali, presentazione di riferimento e osservazioni esterne. Campi non verificati mantengono nomi e codici tecnici; gli output del simulatore mancanti non vengono inventati.
 
@@ -60,3 +60,7 @@ Dettagli in [Security](SECURITY.md), [Contributing](CONTRIBUTING.md) e [Stato](P
 Sono pubblicati solo sorgenti ammessi esplicitamente, documentazione ripulita e demo sintetiche incorporate. Setup personali/commerciali, catture, test, log, percorsi locali e indagini interne sono esclusi.
 
 Il codice originale del progetto usa la [licenza MIT](LICENSE), senza concedere diritti su prodotti, servizi, marchi o materiali di terzi: [Third-party notices](THIRD_PARTY_NOTICES.md). Usa solo file ai quali sei autorizzato ad accedere e rispetta i termini applicabili.
+
+## Demo per modello
+
+In cima al Garage scegli **Demo sintetica → Apri confronto demo**. Sono disponibili Camry NextGen, Acura GTP e Ferrari GT3, ciascuna con una coppia A/B e una variazione intenzionale della pressione anteriore sinistra. I valori sono inventati: gli esempi illustrano il lettore e non sono setup utilizzabili o raccomandati per il simulatore.
