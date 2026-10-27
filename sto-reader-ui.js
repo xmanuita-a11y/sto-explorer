@@ -1,6 +1,6 @@
 const state={a:null,b:null}, generation={a:0,b:0};
 // SDK snapshots remain a separate observation; never merge them into STO state.
-let sdkSnapshot=null,garageSource='sto',sdkError='',sdkGeneration=0;
+let nativeExport=null,sdkSnapshot=null,garageSource='sto',sdkError='',sdkGeneration=0;
 const messages={a:{key:'Nessun setup aperto.'},b:{key:'Facoltativo: aggiungi un file da confrontare.'}},errors={a:false,b:false};
 const $=id=>document.getElementById(id);
 const T=StoI18n.t;
@@ -37,6 +37,16 @@ function fieldHelp(parent,name){
   block(details,info.title,'secondary');block(details,info.description,'help');block(details,info.source+' · '+T('pagina {n}',{n:info.page}),'field-source');block(details,info.qualification,'field-source');parent.append(details);
 }
 let garagePage='all';
+const garagePages={all:'Tutte le regolazioni',tires:'Pneumatici',chassis:'Telaio',aero:'Aerodinamica',drivetrain:'Trasmissione',electronics:'Elettronica',fuel:'Motore e carburante',other:'Altri parametri',notes:'Note'};
+function useModelLayout(){return typeof StoModelLayout!=='undefined'&&!StoGarage.isNextGen(referenceCar());}
+function syncGaragePages(){
+  const extended=garageSource==='sto'&&useModelLayout();
+  $('garage-tabs').className='garage-tabs'+(extended?' garage-model-tabs':'');
+  const available=new Set(extended?allRows().map(row=>StoModelLayout.pageFor(row)):[]);
+  for(const page of ['aero','drivetrain','electronics','fuel','other'])$('garage-'+page).hidden=!extended||!available.has(page);
+  if(!['all','tires','chassis','notes'].includes(garagePage)&&(!extended||!available.has(garagePage)))garagePage='all';
+}
+
 function renderSdkGarage(grid){
   grid.className='garage-grid garage-sdk garage-page-'+(garagePage==='all'?'sdk-all':garagePage);
   try{
@@ -46,6 +56,7 @@ function renderSdkGarage(grid){
     $('garage-file-name').textContent='SDK · '+meta.car;
     $('garage-source').textContent='SDK · '+meta.track;
     $('garage-caption').textContent=T('Fonte: snapshot SDK del simulatore · {car} · {track} · {time} · unità originali SDK.',{car:meta.car,track:meta.track,time:meta.observedAt});
+    if(plan.layout==='observed-sdk-hierarchy')$('garage-caption').textContent+=' '+T('Struttura SDK del modello; disposizione e controlli nativi non verificati.');
     if(garagePage==='notes'){
       grid.hidden=true;$('garage-notes-content').hidden=false;
       block($('garage-notes-content'),T('Nessuna nota disponibile nello snapshot SDK. Torna ai file STO per le note dei setup.'),'empty');return;
@@ -74,18 +85,40 @@ function renderSdkGarage(grid){
     $('garage-alert').hidden=false;$('garage-alert').textContent=error.message;
   }
 }
+function renderNativeExport(grid){
+  const plan=StoNativeExport.plan(nativeExport,garagePage);
+  grid.className='garage-grid garage-sdk garage-model garage-export';
+  $('garage-file-name').textContent=plan.metadata.car+' · '+plan.metadata.setupName;
+  $('garage-source').textContent='HTML · '+plan.metadata.track;
+  $('garage-caption').textContent=T('Fonte: export HTML iRacing · etichette, ordine e valori del file · nessuna associazione automatica allo STO.');
+  if(garagePage==='notes'){
+    grid.hidden=true;$('garage-notes-content').hidden=false;
+    const note=document.createElement('pre');note.textContent=plan.notes||T('Nessuna nota.');$('garage-notes-content').append(note);return;
+  }
+  for(const section of plan.sections){
+    if(section.domain==='notes')continue;
+    const card=document.createElement('section');card.className='garage-card garage-'+section.key;
+    const heading=document.createElement('h2');heading.textContent=section.title;card.append(heading);
+    for(const row of section.rows){
+      const entry=document.createElement('div');entry.className='garage-entry sdk-entry';entry.setAttribute('data-export-path',row.path);
+      block(entry,row.label,'garage-label');const values=document.createElement('div');values.className='garage-values';
+      const value=document.createElement('div');value.className='garage-value';block(value,row.value,'primary');values.append(value);entry.append(values);card.append(entry);
+    }
+    grid.append(card);
+  }
+}
 function renderGarage(rows){
   resetGarageHelp();
   $('garage-load-a').textContent='My Setups · A';$('garage-load-b').textContent=T('Apri il secondo setup');$('garage-clear-a').textContent=T('Rimuovi A');$('garage-clear-b').textContent=T('Rimuovi B');
   $('garage-metric').textContent=($('metric-check').checked?'☑ ':'☐ ')+T('Metric units');$('garage-metric').setAttribute('aria-pressed',String($('metric-check').checked));$('garage-autoload').textContent=T('Auto-load setups for this car');
-  $('garage-metric').disabled=garageSource==='sdk';
-  if(garageSource==='sdk')$('garage-metric').textContent=T('Unità originali SDK');
-  $('garage-return-sto').hidden=garageSource!=='sdk';
+  $('garage-metric').disabled=garageSource!=='sto';
+  if(garageSource!=='sto')$('garage-metric').textContent=T(garageSource==='sdk'?'Unità originali SDK':'Unità originali export');
+  $('garage-return-sto').hidden=garageSource==='sto';
   const actionPanel=$('garage-file-actions');
   const addAction=(id,label,disabled=true,parent=actionPanel)=>{let button=$(id);if(!button){button=document.createElement('button');button.id=id;button.type='button';}if(button.parentElement!==parent)parent.append(button);button.textContent=label;button.disabled=disabled;return button;};
   addAction('garage-official','Official Setups');addAction('garage-shared','Shared Setups');
   const fileRow=$('garage-file-row');
-  addAction('garage-export','Export CSV',garageSource==='sdk'||!(state.a||state.b),fileRow);addAction('garage-save','Save',true,fileRow);addAction('garage-share','Share',true,fileRow);addAction('garage-revert','Revert',true,$('garage-sidebar-bottom'));
+  addAction('garage-export','Export CSV',garageSource!=='sto'||!(state.a||state.b),fileRow);addAction('garage-save','Save',true,fileRow);addAction('garage-share','Share',true,fileRow);addAction('garage-revert','Revert',true,$('garage-sidebar-bottom'));
   const grid=$('garage-grid');grid.replaceChildren();
   grid.setAttribute('style','');
   const pair=Boolean(state.a&&state.b);
@@ -93,13 +126,18 @@ function renderGarage(rows){
   $('garage-window').hidden=$('view').value!=='garage';
   $('garage-alert').hidden=!sdkError&&!Object.values(errors).some(Boolean);
   $('garage-alert').textContent=[...['a','b'].filter(side=>errors[side]).map(side=>T(messages[side].key,messages[side].args)),sdkError].filter(Boolean).join('\n');
+  if(garageSource==='sto'&&!$('notice').hidden){
+    $('garage-alert').textContent=[$('garage-alert').textContent,$('notice').textContent].filter(Boolean).join('\n');
+    $('garage-alert').hidden=false;
+  }
   $('garage-caption').textContent=StoGarage.isNextGen(referenceCar())?'NextGen · layout dal manuale · scale garage da verificare':'Layout generico · carica un setup NextGen per la disposizione di riferimento';
   $('garage-file-name').textContent=(state.a||state.b)?.name||'Apri un file .sto dal menu a destra';
   $('garage-tools').hidden=$('view').value!=='garage';
-  for(const page of ['all','tires','chassis','notes'])$('garage-'+page).setAttribute('aria-pressed',String(garagePage===page));
+  for(const page of Object.keys(garagePages))$('garage-'+page).setAttribute('aria-pressed',String(garagePage===page));
   const notesView=$('garage-notes-content');notesView.hidden=garagePage!=='notes';notesView.replaceChildren();
   $('garage-source').textContent=['a','b'].filter(side=>state[side]).map(side=>side.toUpperCase()+': '+state[side].name).join('  /  ');
   if(garageSource==='sdk'){renderSdkGarage(grid);return;}
+  if(garageSource==='native-export'){renderNativeExport(grid);return;}
   if(garagePage==='notes'){
     grid.hidden=true;
     for(const side of ['a','b'])if(state[side]){
@@ -124,8 +162,17 @@ function renderGarage(rows){
       native.code==='no-profile'?'Disposizione di riferimento; profilo garage verificato non disponibile per questo setup.':'Impossibile usare il profilo garage verificato; viene mostrata la disposizione di riferimento.';
     $('garage-caption').textContent=T(caption);
   }
-  for(const [key,title]of StoGarage.sections){
-    const members=rows.filter(r=>StoGarage.section(r.name,r.description.group)===key).sort((a,b)=>StoGarage.order(a.name)-StoGarage.order(b.name));if(!members.length)continue;
+  if(typeof StoModelGroups!=='undefined'&&typeof STO_MODEL_GROUP_CATALOG!=='undefined'){
+    const observed=['a','b'].filter(side=>state[side]).map(side=>{
+      const group=StoModelGroups.lookup(state[side],STO_MODEL_GROUP_CATALOG);
+      return side.toUpperCase()+': '+state[side].car+' · '+(group?T('Gruppo struttura {id} · {n} campi',{id:group.groupId.slice(0,12),n:group.fieldCount}):T('Struttura non censita'));
+    });
+    if(observed.length)$('garage-caption').textContent=observed.join(' / ')+' · '+T('Gruppi basati sui campi STO; catalogo nativo da verificare.');
+  }
+  const panels=useModelLayout()?StoModelLayout.plan(($('sort').value||'group')==='group'?[...rows].sort((a,b)=>(a.a||a.b).line-(b.a||b.b).line):rows):StoGarage.sections.map(([key,title])=>({key,title,rows:rows.filter(r=>StoGarage.section(r.name,r.description.group)===key).sort((a,b)=>StoGarage.order(a.name)-StoGarage.order(b.name))}));
+  if(useModelLayout())grid.className+=' garage-model';
+  for(const {key,title,rows:members}of panels){
+    if(!members.length)continue;
     const card=document.createElement('section');card.className='garage-card garage-'+key+(['rear','cockpit','other'].includes(key)?' wide':'');
     const heading=document.createElement('h2');heading.textContent=T(title);card.append(heading);
     const outputRows=[];
@@ -177,7 +224,7 @@ function visibleRows(){
   const rows=allRows().filter(r=>{
     const words=[r.name,r.description.label,T(r.description.group)].join(' ').toLocaleLowerCase(StoI18n.language).split(/[\s·]+/);
     const matches=!query||query.split(/\s+/).every(token=>words.some(word=>word.startsWith(token)));
-    const inPage=$('view').value!=='garage'||garagePage==='all'||(garagePage==='notes'?false:garagePage==='tires'?r.description.group==='Pneumatici':r.description.group!=='Pneumatici');
+    const inPage=$('view').value!=='garage'||garagePage==='all'||(garagePage==='notes'?false:useModelLayout()?StoModelLayout.pageFor(r)===garagePage:garagePage==='tires'?r.description.group==='Pneumatici':r.description.group!=='Pneumatici');
     return inPage&&(!group||r.description.group===group)&&matches&&(!($('diff-only').checked&&state.a&&state.b)||r.status!=='same');
   });
   const order=$('sort').value||'group',rank={changed:0,'only-a':1,'only-b':1,same:2,single:2};
@@ -250,6 +297,7 @@ function render(){
   $('tablebox').className='tablebox'+($('originals').checked?'':' originals-off');
   const completeRows=allRows(),counts={};completeRows.forEach(r=>counts[r.status]=(counts[r.status]||0)+1);
   renderOverview(completeRows,counts);
+  syncGaragePages();
   const rows=visibleRows();$('rows').replaceChildren();let currentGroup;
   for(const r of rows){
     const d=r.description;
@@ -269,10 +317,17 @@ function render(){
   $('print-heading').textContent=[T('STO Reader 0.4 — risultati filtrati'),state.a?'A: '+state.a.name+' · '+state.a.car:'',state.b?'B: '+state.b.name+' · '+state.b.car:'',T('Filtri: {filters}',{filters:filterSummary()})].filter(Boolean).join('\n');
   for(const id of ['units','metric-check','search','group','sort','originals','swap','export','report','print','view']){
     const ordinaryDisabled=['export','report','print'].includes(id)&&!(state.a||state.b);
-    $(id).disabled=garageSource==='sdk'||ordinaryDisabled;
+    $(id).disabled=garageSource!=='sto'||ordinaryDisabled;
   }
-  $('diff-only').disabled=garageSource==='sdk'||!(state.a&&state.b);
-  if(garageSource==='sdk')$('stats').textContent=T('Snapshot SDK separato dai file STO · unità e testo originali.');
+  $('diff-only').disabled=garageSource!=='sto'||!(state.a&&state.b);
+  if(garageSource!=='sto')$('stats').textContent=T(garageSource==='sdk'?'Snapshot SDK separato dai file STO · unità e testo originali.':'Export HTML separato dai file STO · etichette e valori originali.');
+  $('garage-comparison').hidden=garageSource!=='sto';
+  $('garage-summary').textContent=$('stats').textContent;
+  $('garage-search').value=$('search').value;
+  $('garage-diff-only').checked=$('diff-only').checked;
+  $('garage-diff-only').disabled=$('diff-only').disabled;
+  $('garage-swap').disabled=garageSource!=='sto'||!(state.a&&state.b);
+  $('garage-filter-summary').textContent=filterSummary();
 }
 async function load(side,file){
   if(!file)return;sdkGeneration++;garageSource='sto';sdkError='';const ticket=++generation[side];state[side]=null;errors[side]=false;messages[side]={key:'Lettura di {name}…',args:{name:file.name}};render();
@@ -323,12 +378,27 @@ $('garage-sdk-file').addEventListener('change',async event=>{
     sdkSnapshot=snapshot;garageSource='sdk';garagePage='chassis';sdkError='';$('view').value='garage';render();
   }catch(error){if(ticket!==sdkGeneration)return;sdkError=T('Impossibile importare lo snapshot SDK: {error}',{error:error.message});render();}
 });
+$('garage-load-native-export').addEventListener('click',()=>$('garage-native-export-file').click());
+$('garage-native-export-file').addEventListener('change',async event=>{
+  const file=event.target.files[0];event.target.value='';if(!file)return;const ticket=++sdkGeneration;
+  try{
+    if(file.size>1024*1024)throw new Error(T('Export troppo grande: limite 1 MiB.'));
+    const text=new TextDecoder('utf-8',{fatal:true}).decode(await file.arrayBuffer());
+    const parsed=StoNativeExport.parse(text);StoNativeExport.plan(parsed,'all');
+    if(ticket!==sdkGeneration)return;
+    nativeExport=parsed;garageSource='native-export';garagePage='all';sdkError='';$('view').value='garage';render();
+  }catch(error){if(ticket!==sdkGeneration)return;sdkError=T('Impossibile importare export HTML: {error}',{error:error.message});render();}
+});
 $('garage-return-sto').addEventListener('click',()=>{sdkGeneration++;garageSource='sto';sdkError='';garagePage='chassis';render();});
-for(const page of ['all','tires','chassis','notes'])$('garage-'+page).addEventListener('click',()=>{garagePage=page;render();});
+for(const page of Object.keys(garagePages))$('garage-'+page).addEventListener('click',()=>{garagePage=page;render();});
 for(const id of ['search','diff-only','group','units','sort','originals','wheel-kind','view'])$(id).addEventListener(id==='search'?'input':'change',render);
 $('metric-check').addEventListener('change',()=>{$('units').value=$('metric-check').checked?'metric':'imperial';render();});
-$('reset').addEventListener('click',()=>{garagePage='all';$('search').value='';$('group').value='';$('diff-only').checked=false;$('sort').value='group';render();});
-$('swap').addEventListener('click',()=>{generation.a++;generation.b++;[state.a,state.b]=[state.b,state.a];for(const side of ['a','b']){$('file-'+side).value='';errors[side]=false;messages[side]={key:'Nessun setup aperto.'};}render();});
+function resetFilters(){garagePage='all';$('search').value='';$('group').value='';$('diff-only').checked=false;$('sort').value='group';render();}
+function swapSetups(){generation.a++;generation.b++;[state.a,state.b]=[state.b,state.a];for(const side of ['a','b']){$('file-'+side).value='';errors[side]=false;messages[side]={key:'Nessun setup aperto.'};}render();}
+for(const id of ['reset','garage-reset'])$(id).addEventListener('click',resetFilters);
+for(const id of ['swap','garage-swap'])$(id).addEventListener('click',swapSetups);
+$('garage-search').addEventListener('input',()=>{$('search').value=$('garage-search').value;render();});
+$('garage-diff-only').addEventListener('change',()=>{$('diff-only').checked=$('garage-diff-only').checked;render();});
 $('language').addEventListener('change',()=>{StoI18n.setLanguage($('language').value);StoI18n.applyStatic();for(const option of $('group').children)if(option.value)option.textContent=T(option.value);render();});
 function csvContent(){
   const quote=value=>'"'+String(value??'').replace(/^[=+@\-\t\r]/,"'$&").replace(/"/g,'""')+'"';
@@ -336,7 +406,7 @@ function csvContent(){
   for(const r of visibleRows()){const d=r.description;records.push([T(d.group),d.label,r.name,r.occurrence,state.a?.name,state.a?.car,r.a?.value,StoPresentation.format(r.a?.value,d,units()).primary,r.a?.line,state.b?.name,state.b?.car,r.b?.value,StoPresentation.format(r.b?.value,d,units()).primary,r.b?.line,r.a&&r.b?StoPresentation.subtract(r.a.value,r.b.value):'',state.a&&state.b?StoPresentation.delta(r.a?.value,r.b?.value,d,units()).primary:'',T(labels[r.status]),d.quality+'; '+d.unitEvidence]);}
   return '\ufeff'+records.map(row=>row.map(quote).join(';')).join('\r\n');
 }
-function filterSummary(){return T('Area: {group} · ricerca: {search} · {mode} · unità: {units} · ordine: {order}',{group:T($('group').value||'tutte'),search:$('search').value||T('nessuna'),mode:T($('diff-only').checked&&state.a&&state.b?'solo differenze':'tutti i valori'),units:T(units()),order:T($('sort').value||'group')})+($('view').value==='garage'?' · '+T('VISTA')+': '+T({all:'Tutte le regolazioni',tires:'Pneumatici',chassis:'Telaio',notes:'Note'}[garagePage]):'');}
+function filterSummary(){return T('Area: {group} · ricerca: {search} · {mode} · unità: {units} · ordine: {order}',{group:T($('group').value||'tutte'),search:$('search').value||T('nessuna'),mode:T($('diff-only').checked&&state.a&&state.b?'solo differenze':'tutti i valori'),units:T(units()),order:T($('sort').value||'group')})+($('view').value==='garage'?' · '+T('VISTA')+': '+T(garagePages[garagePage]):'');}
 function reportContent(){
   const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const rows=visibleRows();

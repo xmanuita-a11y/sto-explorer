@@ -388,5 +388,20 @@
   "Impossibile mostrare lo snapshot SDK. Torna ai file STO o importa un altro snapshot.": "Unable to display the SDK snapshot. Return to STO files or import another snapshot.",
   "Snapshot SDK separato dai file STO · unità e testo originali.": "SDK snapshot separate from STO files · original units and text.",
   "Snapshot troppo grande: limite 1 MiB.": "Snapshot too large: 1 MiB limit.",
-  "Impossibile importare lo snapshot SDK: {error}": "Unable to import SDK snapshot: {error}"
+  "Impossibile importare lo snapshot SDK: {error}": "Unable to import SDK snapshot: {error}",
+  "Confronto setup": "Setup comparison",
+  "Struttura SDK del modello; disposizione e controlli nativi non verificati.": "Model SDK structure; native layout and controls are unverified.",
+  "Gruppo struttura {id} · {n} campi": "Structure group {id} · {n} fields",
+  "Struttura non censita": "Structure not inventoried",
+  "Gruppi basati sui campi STO; catalogo nativo da verificare.": "Groups based on STO fields; native catalog needs verification.",
+  "Trasmissione": "Drivetrain",
+  "Elettronica": "Electronics",
+  "Centrale anteriore": "Front central suspension",
+  "Centrale posteriore": "Rear central suspension",
+  "Apri export HTML iRacing": "Open iRacing HTML export",
+  "Unità originali export": "Original export units",
+  "Export HTML separato dai file STO · etichette e valori originali.": "HTML export kept separate from STO files · original labels and values.",
+  "Fonte: export HTML iRacing · etichette, ordine e valori del file · nessuna associazione automatica allo STO.": "Source: iRacing HTML export · labels, order and values from the file · no automatic STO association.",
+  "Export troppo grande: limite 1 MiB.": "Export too large: 1 MiB limit.",
+  "Impossibile importare export HTML: {error}": "Cannot import HTML export: {error}"
 }

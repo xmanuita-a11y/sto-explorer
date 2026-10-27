@@ -1,12 +1,48 @@
-# Modifiche
+# Changelog
 
-## 17 ottobre 2026
+Notable user-facing changes are recorded here in reverse chronological order.
+Pre-release versions remain experimental and do not imply simulator compatibility.
 
-- Reso il garage il contenuto principale della pagina.
-- Aggiornata la cornice del garage con colori, misure tipografiche, pannelli, frecce e icona derivati da risorse native verificate.
-- Aggiunto il pannello contestuale laterale con fonte e grado di verifica delle spiegazioni.
-- Riordinate le azioni dei file e corretta la navigazione verticale della barra laterale.
-- Mantenuti separati i valori letti dagli STO, i dati sintetici della demo e gli snapshot osservati tramite SDK.
-- Rimossa dalla home la sezione inferiore “Note dei setup”; le note restano disponibili nella scheda NOTES del garage e, su scelta esplicita, nei report.
-- Esclusi dalla distribuzione pubblica test, fixture di sviluppo, schermate, log e materiali intermedi di analisi.
-- Verificata l'assenza di setup, percorsi locali e dati personali nei file destinati al repository.
+## [1.0.0-rc.2] - 2026-10-27
+
+### Added
+
+- Model-aware reference panels for heave, third and central suspension, aerodynamics, drivetrain, electronics and fuel.
+- Exact structural lookup for 53 model/content-version identities and 89 global field schemas, represented by 98 model/schema combinations.
+- Local import of the observed iRacing HTML setup-export format, retaining document labels, ordered values and notes.
+- Separate views for SDK snapshots from other models without inheriting Camry control semantics.
+- Setup search, difference filtering, swap, reset and comparison summaries in the Garage sidebar.
+
+### Fixed
+
+- Preserve additional SDK domains instead of omitting them from the Garage view.
+- Keep diffuser, differential, hybrid and central-suspension parameters in distinct reference panels.
+- Reject inferred metadata in verified native profiles and disclose unsupported native control assets.
+- Preserve earlier SDK captures by creating a new output directory for every acquisition.
+- Show load and comparison warnings outside the collapsed reader panel.
+- Keep model navigation compact without overlapping the setup caption.
+
+### Validation
+
+- The private regression run covers 12 synthetic application suites, four SDK capture-lifecycle checks and isolated builds.
+- Synthetic encrypted inputs cover all 98 observed model/schema combinations without omitted or duplicated field identities.
+- Browser smoke checks cover model navigation, central suspension, HTML export import, notes and return to STO mode.
+- Native control catalogs remain incomplete; reference grouping does not establish native units, enums or physics behavior.
+
+## [1.0.0-rc.1] - 2026-10-17
+
+### Added
+
+- Standalone, read-only STO v3 viewing and A/B comparison.
+- Garage-first presentation with Italian and English interface text.
+- Local result exports and optional public-SDK snapshot viewing.
+- Embedded synthetic demos without personal setup files.
+
+### Changed
+
+- Kept setup notes in the Garage Notes view instead of a separate home-page panel.
+- Restricted repository contents to explicitly reviewed public files.
+
+### Documentation
+
+- Added an English README and language navigation on 2026-10-25.

@@ -77,6 +77,13 @@ const StoNativeRenderer=(()=>{
       if(!ok)diagnostics.push({sourceIndex:control.sourceIndex,variable:control.variable,status,reason});
       if(control.arrows?.length||control.conditionalArrows?.length)
         diagnostics.push({sourceIndex:control.sourceIndex,status:'unresolved-assets',reason:'Arrow asset dimensions are native sentinels; no browser size substituted'});
+      const nativeValue=control.nativeDescriptors?.value;
+      if(nativeValue?.assets&&Object.keys(nativeValue.assets).length)
+        // Informational adapter coverage only: the formatted value remains readable.
+        // Asset paths identify recovered descriptors, not verified browser images.
+        diagnostics.push({sourceIndex:control.sourceIndex,status:'unresolved-assets',severity:'info',
+          nativeKind:nativeValue.kind,assets:{...nativeValue.assets},
+          reason:'Native control assets are preserved as metadata; HTML displays read-only formatted text'});
     }
     const width=options.width??Math.max(0,right),height=options.height??Math.max(0,bottom);
     if(!Number.isFinite(width)||!Number.isFinite(height)||width<0||height<0)throw new Error('Invalid HTML surface dimensions');

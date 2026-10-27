@@ -1,7 +1,12 @@
 {
   "name": "STO Explorer",
-  "version": "1.0.0-rc.1",
-  "supported_sto_headers": [3],
-  "languages": ["it", "en"],
-  "release_status": "candidate_pending_real_browser_acceptance"
+  "version": "1.0.0-rc.2",
+  "supported_sto_headers": [
+    3
+  ],
+  "languages": [
+    "it",
+    "en"
+  ],
+  "release_status": "experimental_release_candidate"
 }

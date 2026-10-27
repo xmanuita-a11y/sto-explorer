@@ -29,6 +29,8 @@ const StoNativeGarage=(()=>{
       if(!profile.pages||!['all','tires','chassis'].every(key=>Number.isInteger(profile.pages[key])&&profile.pages[key]>=0&&profile.pages[key]<10))throw new Error('Explicit page mapping required');
       const names=new Set();
       for(const metadata of profile.records){
+        if(metadata?._inferred===true||metadata?._source==='inferred-from-patterns')
+          throw new Error('Inferred metadata cannot be used in a verified native profile');
         if(typeof metadata?.name!=='string'||!metadata.name||names.has(metadata.name))throw new Error('Missing/duplicate metadata name');
         names.add(metadata.name);
       }

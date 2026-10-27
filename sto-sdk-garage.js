@@ -19,7 +19,7 @@ const StoSdkGarage=(()=>{
   function validate(snapshot){
     if(!mapping(snapshot)||snapshot.schemaVersion!==1||snapshot.source!=='iRacing SDK sessionInfo.CarSetup')throw new Error('Expected iRacing SDK CarSetup snapshot');
     if(!mapping(snapshot.car)||typeof snapshot.car.CarPath!=='string'||!snapshot.car.CarPath||!mapping(snapshot.setup))throw new Error('Snapshot requires explicit car identity and CarSetup');
-    if(snapshot.car.CarPath!=='stockcars toyotacamry2022')throw new Error('SDK layout currently verified only for Toyota Camry NextGen');
+    if(snapshot.car.CarPath.length>256||/[\x00-\x1f]/.test(snapshot.car.CarPath))throw new Error('Invalid SDK car identity');
     if(typeof snapshot.observed_at_utc!=='string'||snapshot.observed_at_utc.length>128||!Number.isFinite(Date.parse(snapshot.observed_at_utc)))throw new Error('Snapshot timestamp missing/invalid');
     for(const value of [snapshot.track,snapshot.car.CarScreenName])if(value!=null&&(typeof value!=='string'||value.length>256||/[\x00-\x1f]/.test(value)))throw new Error('Invalid SDK car/track metadata');
     if(snapshot.session_info_update!=null&&(!Number.isInteger(snapshot.session_info_update)||snapshot.session_info_update<0))throw new Error('Invalid SDK update counter');
@@ -37,15 +37,19 @@ const StoSdkGarage=(()=>{
       }
     }
     visit(snapshot.setup,0);
-    if(!mapping(snapshot.setup.Tires)||!mapping(snapshot.setup.Chassis))throw new Error('Snapshot requires explicit Tires and Chassis');
+    if(!Object.keys(snapshot.setup).some(key=>key!=='UpdateCount'))throw new Error('Snapshot requires garage fields');
+    for(const domain of ['Tires','Chassis'])if(domain in snapshot.setup&&!mapping(snapshot.setup[domain]))throw new Error('Expected SDK domain mapping');
     return snapshot;
   }
   function plan(input,page='chassis'){
     const snapshot=validate(input);
     if(!['all','tires','chassis'].includes(page))throw new Error('Unsupported SDK page');
+    // Only the observed Camry schema receives its presentation hints.
+    // Other models preserve their exact SDK hierarchy and strings without controls.
+    if(snapshot.car.CarPath!=='stockcars toyotacamry2022')return genericPlan(snapshot,page);
     const sections=[],used=new Set();
     function section(domain,sourceKey,key,title,order){
-      const value=snapshot.setup[domain][sourceKey];
+      const value=snapshot.setup[domain]?.[sourceKey];
       if(value===undefined)return;
       if(!mapping(value))throw new Error('Expected SDK section mapping');
       const rows=[];
@@ -71,7 +75,7 @@ const StoSdkGarage=(()=>{
     // Preserve future fields visibly rather than silently dropping unknown SDK sections.
     for(const domain of page==='all'?['Tires','Chassis']:[page==='tires'?'Tires':'Chassis']){
       const known=new Set(corners.map(row=>row[0]).concat(domain==='Chassis'?['Front','FrontArb','Rear']:[]));
-      for(const [name,value] of Object.entries(snapshot.setup[domain])){
+      for(const [name,value] of Object.entries(snapshot.setup[domain]??{})){
         if(known.has(name))continue;
         const rows=[];
         function flatten(node,path){
@@ -82,10 +86,29 @@ const StoSdkGarage=(()=>{
         sections.push({key:'other',title:name,rows});
       }
     }
+    if(page!=='tires')sections.push(...genericPlan(snapshot,page,Object.keys(snapshot.setup).filter(key=>!['Tires','Chassis','UpdateCount'].includes(key))).sections);
     return {sections,metadata:{car:snapshot.car.CarScreenName??snapshot.car.CarPath,carPath:snapshot.car.CarPath,track:snapshot.track??null,observedAt:snapshot.observed_at_utc,update:snapshot.setup.UpdateCount??null},complete:false,
       limitations:['Snapshot values are already formatted by the simulator and retain their original units',
       'No association with a loaded STO or modified screenshot is inferred',
       'Geometry is reconstructed from the supplied screenshots; original CML remains unavailable']};
+  }
+  function genericPlan(snapshot,page,domains=Object.keys(snapshot.setup).filter(key=>key!=='UpdateCount'&&(page==='all'||(page==='tires'?key==='Tires':key!=='Tires')))){
+    const sections=[];
+    for(const domain of domains){
+      const value=snapshot.setup[domain];
+      const parts=mapping(value)?Object.entries(value):[['',value]];
+      for(const [name,node] of parts){
+        const rows=[];
+        function visit(child,path){
+          if(mapping(child))for(const [key,next] of Object.entries(child))visit(next,path.concat(key));
+          else rows.push({path:path.join('.'),label:path.slice(name?2:1).join(' / ')||name||domain,value:child,kind:'output',control:'none'});
+        }
+        visit(node,name?[domain,name]:[domain]);
+        if(rows.length)sections.push({key:'other',title:domain+(name?' / '+name:''),rows});
+      }
+    }
+    return {sections,metadata:{car:snapshot.car.CarScreenName??snapshot.car.CarPath,carPath:snapshot.car.CarPath,track:snapshot.track??null,observedAt:snapshot.observed_at_utc,update:snapshot.setup.UpdateCount??null},complete:false,
+      layout:'observed-sdk-hierarchy',limitations:['Exact SDK hierarchy and original formatted values; native Garage layout and control types are unverified.','No STO binding, conversion or model-family inheritance is inferred.']};
   }
   return Object.freeze({validate,plan});
 })();

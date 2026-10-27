@@ -26,13 +26,16 @@ if missing:
 i18n = 'const STO_EN_CATALOG = '+json.dumps(catalog, ensure_ascii=True)+';\n'+(root/'sto-reader-i18n.js').read_text(encoding='utf-8')
 core = (root/'sto-reader-core.js').read_text(encoding='utf-8')
 presentation = (root/'sto-reader-presentation.js').read_text(encoding='utf-8')
-garage = (root/'sto-reader-garage.js').read_text(encoding='utf-8')
+garage = (root/'sto-model-layout.js').read_text(encoding='utf-8') + '\n' + (root/'sto-model-groups.js').read_text(encoding='utf-8') + '\nconst STO_MODEL_GROUP_CATALOG = ' + json.dumps(json.loads((root/'sto-model-group-catalog.json').read_text(encoding='utf-8'))).replace('<', '\\u003c') + ';\n' + (root/'sto-reader-garage.js').read_text(encoding='utf-8')
 ui = (root/'sto-reader-ui.js').read_text(encoding='utf-8')
 native_catalog = json.loads((root/'sto-native-garage-catalog.json').read_text(encoding='utf-8'), object_pairs_hook=unique_keys)
 if native_catalog.get('schemaVersion') != 1 or not isinstance(native_catalog.get('profiles'), list):
     raise ValueError('Invalid native garage catalog')
 # Profiles must carry actual local source identities. No runtime network/file lookup.
 for profile in native_catalog['profiles']:
+    for record in profile.get('records', []):
+        if record.get('_inferred') is True or record.get('_source') == 'inferred-from-patterns':
+            raise ValueError('Inferred metadata cannot be embedded as a verified native profile')
     for source in profile.get('sources', []):
         source_path = (root/source['path']).resolve()
         if not source_path.is_relative_to(root) or not source_path.is_file():
@@ -41,7 +44,7 @@ for profile in native_catalog['profiles']:
             raise ValueError('Native profile source SHA256 mismatch: '+source['path'])
 native = '\n'.join((root/name).read_text(encoding='utf-8') for name in (
     'sto-native-generator-extra.js', 'sto-native-generator.js', 'sto-native-formatter.js',
-    'sto-native-renderer.js', 'sto-native-garage.js', 'sto-sdk-garage.js'))
+    'sto-native-renderer.js', 'sto-native-garage.js', 'sto-sdk-garage.js', 'sto-native-export.js'))
 native_catalog_js = json.dumps(native_catalog).replace('<', '\\u003c').replace('>', '\\u003e').replace('&', '\\u0026')
 material = json.loads((root/'sto-reader-material.json').read_text())
 demo = json.loads((root/'sto-demo-data.json').read_text())
@@ -55,5 +58,5 @@ if any(marker in output for marker in ('CORE_PLACEHOLDER', 'PRESENTATION_PLACEHO
     raise ValueError('Build incompleta: placeholder residui')
 for source in ('STO Reader 0.4','STO READER 0.4','versione 0.4','version 0.4'):
     output = output.replace(source, source.replace('0.4', app['version']))
-(root/'STO_Reader_Offline.html').write_text(output, encoding='utf-8')
+(root/'STO_Reader_Offline.html').write_text(output, encoding='utf-8', newline='\n')
 print('Built STO_Reader_Offline.html')
