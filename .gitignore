@@ -1,7 +1,8 @@
-# Only reviewed application files belong in this repository.
+# Public source allowlist. Private data and verification material stay local.
 *
 !/STO_Reader_Offline.html
 !/build_sto_reader.py
+!/capture_iracing_garage_sdk.py
 !/sto_static_i18n.py
 !/sto-reader-ui.html.in
 !/sto-reader-ui.js
@@ -15,6 +16,7 @@
 !/sto-native-renderer.js
 !/sto-native-garage.js
 !/sto-sdk-garage.js
+!/sto-native-export.js
 !/sto-native-garage-catalog.json
 !/sto-reader-material.json
 !/sto-app.json
@@ -22,9 +24,21 @@
 !/sto-field-names.json
 !/sto-demo-data.json
 !/sto-garage-demo-data.json
-!/capture_iracing_garage_sdk.py
+!/sto-model-groups.js
+!/sto-model-group-catalog.json
+!/sto-model-layout.js
 !/README.md
 !/README.en.md
+!/README.it.md
 !/PROGRESS.md
 !/CHANGELOG.md
+!/SECURITY.md
+!/CONTRIBUTING.md
+!/LICENSE
+!/THIRD_PARTY_NOTICES.md
 !/.gitignore
+!/.gitattributes
+
+!/.github/
+!/.github/workflows/
+!/.github/workflows/build.yml
