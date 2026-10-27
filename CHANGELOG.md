@@ -24,6 +24,12 @@ Pre-release versions remain experimental and do not imply simulator compatibilit
 - Keep model navigation compact without overlapping the setup caption.
 - Bound decoded text, line counts, parameter counts and numeric-token length before rendering.
 
+### Documentation
+
+- Make English the primary overview and retain a maintained Italian guide.
+- Add MIT licensing for original project code, third-party notices and concise contribution/security guidance.
+- Keep private verification files and internal investigation reports outside the public repository.
+
 ### Validation
 
 - The private regression run covers 12 synthetic application suites, four SDK capture-lifecycle checks and isolated builds.

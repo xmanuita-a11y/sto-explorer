@@ -1,20 +1,25 @@
-# Stato di avanzamento
+# Project status
 
-Aggiornato il 17 ottobre 2026.
+Last updated: 2026-10-27 · Release candidate: 1.0.0-rc.2
 
-## Disponibile
+## Available
 
-- Viewer HTML autonomo, offline e in sola lettura per contenitori STO v3 osservati.
-- Confronto tra due setup, filtri, conversioni dichiarate ed esportazione dei risultati.
-- Garage come vista principale, con disposizione per aree e schede Tires, Chassis e Notes.
-- Cornice grafica aggiornata da risorse native verificate: colori selezionati, tipografia, pannello contestuale, controlli SDK e icona Garage.
-- Importazione facoltativa di uno snapshot JSON prodotto dall'SDK pubblico durante una sessione.
-- Elaborazione locale: nessun setup o snapshot viene inviato dall'app a servizi remoti.
+- Standalone, read-only STO v3 viewing with exact decimal A/B comparison.
+- Model-aware reference grouping and conditional navigation for 98 observed model/schema combinations.
+- Separate HTML setup-export and SDK snapshot views.
+- Local result exports, synthetic demos and an English/Italian interface.
+- Public, dependency-free build and source-syntax verification.
 
-## Limite attuale
+## Verification boundary
 
-Il catalogo nativo per vettura è ancora vuoto. I contenuti effettivi di `ui.cml` e `carSetupVarDefs` non sono stati recuperati in forma utilizzabile; quindi nomi, enum, conversioni e disposizione completa di ogni garage non vengono dichiarati come equivalenti al simulatore. I campi non verificati conservano il proprio valore originale e le funzioni che richiederebbero scrittura o simulazione restano disabilitate.
+The private regression run passed 12 synthetic application suites, four SDK capture-lifecycle checks and isolated builds. Synthetic encrypted inputs exercised all 98 model/schema combinations without omitted or duplicated field identities. Browser smoke checks covered model navigation, central suspension, HTML import, notes and returning to an unchanged STO view.
 
-## Prossimo passo tecnico
+These results are separate from full native-Garage equivalence, exhaustive browser coverage and simulator acceptance. Private tests, fixtures, sample data, local reports and investigation materials are not published.
 
-Ricostruire staticamente il percorso che riempie il payload risorsa di tipo `0x81`, oppure acquisire un contenuto già risolto per percorso, quindi generare il catalogo per vettura solo dai dati verificati. L'analisi deve mantenere immutati eseguibili, archivi e setup originali.
+## Remaining work
+
+- Obtain independently verified, model/version-specific native control definitions before adding native profiles.
+- Validate additional export variants and more complete browser/device coverage.
+- Consider worker-based processing and progressive rendering for larger supported inputs.
+
+The native profile catalog remains empty. Unknown values and unsupported native behavior remain explicit.
