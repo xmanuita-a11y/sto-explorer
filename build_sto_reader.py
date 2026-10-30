@@ -47,6 +47,7 @@ native = '\n'.join((root/name).read_text(encoding='utf-8') for name in (
     'sto-native-renderer.js', 'sto-native-garage.js', 'sto-sdk-garage.js', 'sto-native-export.js'))
 native_catalog_js = json.dumps(native_catalog).replace('<', '\\u003c').replace('>', '\\u003e').replace('&', '\\u0026')
 material = json.loads((root/'sto-reader-material.json').read_text())
+car_profiles = json.loads((root/'sto-car-profiles.json').read_text(encoding='utf-8'))
 demo = json.loads((root/'sto-demo-data.json').read_text())
 garage_demo = json.loads((root/'sto-garage-demo-data.json').read_text())
 if garage_demo.get('synthetic') is not True:
@@ -59,7 +60,7 @@ if len(models) != 3 or len({model.get('id') for model in models}) != len(models)
 for model in models:
     if model.get('synthetic') is not True or len(model.get('samples', [])) != 2:
         raise ValueError('Invalid synthetic model comparison')
-output = template.rsplit('</html>', 1)[0] + '<script>\n' + i18n + '\n' + core + '\n' + presentation + '\n' + garage + '\n' + native + '\nconst STO_NATIVE_GARAGE_CATALOG = '+native_catalog_js+';\nconst MATERIAL = ' + json.dumps(material) + ';\nconst STO_DEMO = '+json.dumps(demo)+';\nconst STO_GARAGE_DEMO = '+json.dumps(garage_demo)+';\n' + ui + '\n</script></html>\n'
+output = template.rsplit('</html>', 1)[0] + '<script>\n' + i18n + '\n' + core + '\n' + presentation + '\n' + garage + '\n' + native + '\nconst STO_NATIVE_GARAGE_CATALOG = '+native_catalog_js+';\nconst MATERIAL = ' + json.dumps(material) + ';\nconst STO_CAR_PROFILES = '+json.dumps(car_profiles, ensure_ascii=False).replace('<', '\\u003c').replace('>', '\\u003e')+';\nconst STO_DEMO = '+json.dumps(demo)+';\nconst STO_GARAGE_DEMO = '+json.dumps(garage_demo)+';\n' + ui + '\n</script></html>\n'
 if any(marker in output for marker in ('CORE_PLACEHOLDER', 'PRESENTATION_PLACEHOLDER', 'MATERIAL_PLACEHOLDER')):
     raise ValueError('Build incompleta: placeholder residui')
 for source in ('STO Reader 0.4','STO READER 0.4','versione 0.4','version 0.4'):

@@ -27,6 +27,8 @@
 !/sto-model-groups.js
 !/sto-model-group-catalog.json
 !/sto-model-layout.js
+!/sto-car-profiles.json
+!/sto-field-garage-mapping.json
 !/README.md
 !/README.en.md
 !/README.it.md

@@ -14,6 +14,18 @@ function cell(row,text,cls=''){const td=document.createElement('td');td.textCont
 function block(parent,text,cls){const div=document.createElement('div');div.textContent=text;div.className=cls;parent.append(div);return div;}
 function units(){return $('units').value||'metric';}
 function referenceCar(){return state.a&&state.b?(state.a.car===state.b.car?state.a.car:''):(state.a||state.b)?.car||'';}
+
+// Car profile lookup from decoded STO files
+function carProfile(carId){
+  if(typeof STO_CAR_PROFILES==='undefined'||!STO_CAR_PROFILES.cars)return null;
+  const key=carId.replace(/\\/g,'_');
+  return STO_CAR_PROFILES.cars[key]||null;
+}
+function carLabel(name){
+  if(typeof STO_CAR_PROFILES==='undefined'||!STO_CAR_PROFILES.fieldLabels)return null;
+  return STO_CAR_PROFILES.fieldLabels[name]||null;
+}
+
 function resetGarageHelp(){
   $('garage-help').hidden=true;
   for(const id of ['garage-help-title','garage-help-text','garage-help-source','garage-help-qualification'])$(id).textContent='';
@@ -283,7 +295,8 @@ function render(){
   for(const side of ['a','b']){
     const s=state[side];$('meta-'+side).className='meta'+(errors[side]?' error':'');
     const message=messages[side],args={...message.args};if(args.error)args.error=StoI18n.error(args.error);
-    $('meta-'+side).textContent=s?s.name+'\n'+StoPresentation.carName(s.car)+'\n'+T('{n} parametri · {groups} aree\nModello interno: {car}',{n:s.entries.length,groups:new Set(s.entries.map(e=>StoPresentation.describe(e.name).group)).size,car:s.car}):T(message.key,args);
+    const cp=carProfile(s?.car||'');
+    $('meta-'+side).textContent=s?s.name+'\n'+StoPresentation.carName(s.car)+(cp?' · '+cp.fieldCount+' campi noti':'')+'\n'+T('{n} parametri · {groups} aree\nModello interno: {car}',{n:s.entries.length,groups:new Set(s.entries.map(e=>StoPresentation.describe(e.name).group)).size,car:s.car}):T(message.key,args);
     $('raw-'+side).textContent=s?T('File: {name}\nModello: {car}\nSTO v{version} · contenuto v{content} · coda {tail} byte\nSHA-256: {hash}',{name:s.name,car:s.car,version:s.version,content:s.contentVersion,tail:s.tailSize,hash:s.sha256})+'\n\n'+s.text:'—';
     $('head-'+side).textContent='Setup '+side.toUpperCase()+(s?' · '+s.name:'');
   }
@@ -303,7 +316,8 @@ function render(){
     const d=r.description;
     if(($('sort').value||'group')==='group'&&currentGroup!==d.group){const header=document.createElement('tr');header.className='group-row';const td=cell(header,T(d.group));td.colSpan=5;$('rows').append(header);currentGroup=d.group;}
     const tr=document.createElement('tr');tr.className=r.status;
-    const nameCell=cell(tr,'','parameter');block(nameCell,d.label+(r.occurrence>1?' · '+T('occorrenza {n}',{n:r.occurrence}):''),'primary');block(nameCell,r.name,'technical');if(d.partial)block(nameCell,T('Etichetta parziale · significato da verificare'),'secondary');nameCell.title=d.quality+'\n'+d.unitEvidence;
+    const cl=carLabel(r.name);
+    const nameCell=cell(tr,'','parameter');block(nameCell,(cl||d.label)+(r.occurrence>1?' · '+T('occorrenza {n}',{n:r.occurrence}):''),'primary');block(nameCell,r.name,'technical');if(d.partial&&!cl)block(nameCell,T('Etichetta parziale · significato da verificare'),'secondary');nameCell.title=(cl?cl+' · ':'')+d.quality+'\n'+d.unitEvidence;block(nameCell,r.name,'technical');if(d.partial)block(nameCell,T('Etichetta parziale · significato da verificare'),'secondary');nameCell.title=d.quality+'\n'+d.unitEvidence;
     fieldHelp(nameCell,r.name);
     for(const side of ['a','b']){const entry=r[side],formatted=StoPresentation.format(entry?.value,d,units()),td=cell(tr,'','value');block(td,formatted.primary,'primary');block(td,formatted.secondary,'secondary');if(entry)block(td,T('Originale: {value} · riga {line}',{value:entry.value,line:entry.line}),'technical raw-value');}
     const delta=state.a&&state.b?StoPresentation.delta(r.a?.value,r.b?.value,d,units()):{primary:'—',detail:T('Aggiungi il secondo setup per confrontare')};
