@@ -2,65 +2,24 @@
 
 [English](README.md) · **Italiano** · [Changelog](CHANGELOG.md)
 
-Viewer autonomo e in sola lettura per esplorare e confrontare setup iRacing. Sviluppato con JavaScript, WebCrypto e un builder Python senza dipendenze esterne.
+Visualizzatore offline in sola lettura dei setup iRacing STO v3. Release candidate **1.0.0-rc.4**.
 
-**Release candidate sperimentale.** Supporta contenitori STO v3 osservati. Offre layout di riferimento per modello; la replica completa del Garage nativo e la validazione del simulatore restano fuori dal perimetro attuale.
+Apri `STO_Reader_Offline.html` in Edge, Chrome o Firefox. Inglese predefinito, selettore lingua in alto a destra. Puoi aprire uno o due setup o provare gli esempi sintetici.
 
-Progetto indipendente, non affiliato, approvato o supportato da iRacing. Nomi e marchi di terzi appartengono ai rispettivi titolari.
+Mostra valori originali, nomi tecnici, note, confronto decimale esatto, filtri, CSV e stampa. I profili nativi sono selezionati per identità esatta: Camry NextGen, Ferrari 296 GT3 e Porsche 963 GTP, nelle versioni supportate. Le altre auto usano una disposizione di riferimento. I valori calcolati dal simulatore non vengono inventati; codici e dati sconosciuti restano consultabili nella tabella e nel contenuto originale.
 
-## Avvio
+Importazione HTML e report HTML rimossi. Gli eventuali snapshot SDK JSON restano osservazioni separate dai valori STO.
 
-1. Scarica [STO_Reader_Offline.html](STO_Reader_Offline.html) con **Download raw file** su GitHub.
-2. Aprilo in una versione recente di Chrome, Edge o Firefox.
-3. Scegli **Demo sintetica → Apri confronto demo** in cima al Garage, oppure carica uno o due file che sei autorizzato a usare.
+## Privacy e build
 
-Il viewer non richiede installazione, server, account, connessione o simulatore aperto. Elabora i file nel browser senza caricarli su servizi remoti e senza modificare gli originali.
+Nessun upload, account o analytics. I file vengono letti nella memoria del browser e non modificati. CSV e stampa possono contenere i dati aperti: scegli consapevolmente se condividerli.
 
-## Funzioni
+La release esclude setup personali, catture di sessione, dump, chiavi degli archivi, risorse originali del simulatore e percorsi locali. I demo sono sintetici. I metadati normalizzati conservano gli hash di provenienza; non certificano una replica completa del Garage.
 
-- Confronto A/B con differenze decimali esatte, ricerca, filtro delle modifiche e provenienza dei campi.
-- Pannelli di riferimento per ruote, assi, sospensioni heave/terze/centrali, aerodinamica, trasmissione, elettronica e carburante.
-- Copertura strutturale di 53 identita modello/versione, 89 schemi globali e 98 combinazioni modello/schema. Nomi uguali non dimostrano comportamenti equivalenti tra vetture.
-- Importazione separata di snapshot SDK JSON ed export HTML nel subset supportato, con valori e unita originali.
-- Report locali CSV/HTML stampabili e interfaccia italiana/inglese.
-- Nessuna scrittura STO, comando al simulatore o certificazione dell'ispezione tecnica.
+Build con Python 3.10+: `python build_sto_reader.py`.
+Verifiche pubbliche con Python e Node.js 18+: `python run_tests.py`.
+Verifica browser opzionale con Playwright: `node test_browser.cjs`.
 
-Per leggere un export del simulatore scegli **Apri export HTML iRacing** negli strumenti offline. I suoi dati restano separati dagli STO gia aperti.
+La build pubblica non richiede dati privati. Limiti condizionali, calcoli fisici e dettagli del layout ancora irrisolti sono in [TODO.md](TODO.md).
 
-## Build e verifiche
-
-Richiede Python 3.10 o successivo, senza pacchetti pip o npm:
-
-```sh
-python build_sto_reader.py
-```
-
-La build incorpora sorgenti, cataloghi e demo sintetiche nell'HTML autonomo. Il workflow pubblico verifica build, sintassi, decodifica delle demo, hash, identità ordinata dei campi e differenze A/B esatte su Linux e Windows. Test, fixture di sviluppo, report locali e dati di sessione rimangono privati e non sono distribuiti.
-
-Il codice separa decoder, valori originali, presentazione di riferimento e osservazioni esterne. Campi non verificati mantengono nomi e codici tecnici; gli output del simulatore mancanti non vengono inventati.
-
-## Snapshot SDK facoltativo
-
-Su Windows, con una sessione adatta gia aperta:
-
-```sh
-python capture_iracing_garage_sdk.py
-```
-
-Il helper legge il mapping pubblico dell'SDK e crea una directory locale nuova per ogni cattura. Non apre handle al processo del simulatore e non inietta codice. Le catture possono contenere dati del setup e della sessione: controllale prima di condividerle.
-
-## Limiti
-
-La compatibilita riguarda le varianti osservate. I layout e le conversioni ricavate dai nomi sono interpretazioni dichiarate; il catalogo nativo distribuito e vuoto. Non vengono ricostruiti tutti i controlli, enum, intervalli, risultati fisici o condizioni d'ispezione. Gli hash identificano i byte, non autenticita o accettazione del simulatore. Il lavoro avviene ancora sul thread principale del browser; i limiti d'input non garantiscono protezione da ogni file ostile.
-
-Dettagli in [Security](SECURITY.md), [Contributing](CONTRIBUTING.md) e [Stato](PROGRESS.md).
-
-## Privacy e licenza
-
-Sono pubblicati solo sorgenti ammessi esplicitamente, documentazione ripulita e demo sintetiche incorporate. Setup personali/commerciali, catture, test, log, percorsi locali e indagini interne sono esclusi.
-
-Il codice originale del progetto usa la [licenza MIT](LICENSE), senza concedere diritti su prodotti, servizi, marchi o materiali di terzi: [Third-party notices](THIRD_PARTY_NOTICES.md). Usa solo file ai quali sei autorizzato ad accedere e rispetta i termini applicabili.
-
-## Demo per modello
-
-In cima al Garage scegli **Demo sintetica → Apri confronto demo**. Sono disponibili Camry NextGen, Acura GTP e Ferrari GT3, ciascuna con una coppia A/B e una variazione intenzionale della pressione anteriore sinistra. I valori sono inventati: gli esempi illustrano il lettore e non sono setup utilizzabili o raccomandati per il simulatore.
+Progetto indipendente, non affiliato a iRacing. MIT per il codice originale; vedi [avvertenze sulle terze parti](THIRD_PARTY_NOTICES.md).

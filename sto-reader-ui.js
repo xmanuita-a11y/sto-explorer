@@ -1,10 +1,10 @@
 const state={a:null,b:null}, generation={a:0,b:0};
 // SDK snapshots remain a separate observation; never merge them into STO state.
-let nativeExport=null,sdkSnapshot=null,garageSource='sto',sdkError='',sdkGeneration=0;
+let sdkSnapshot=null,garageSource='sto',sdkError='',sdkGeneration=0;
 const messages={a:{key:'Nessun setup aperto.'},b:{key:'Facoltativo: aggiungi un file da confrontare.'}},errors={a:false,b:false};
 const $=id=>document.getElementById(id);
 const T=StoI18n.t;
-StoI18n.setLanguage(globalThis.navigator?globalThis.navigator.language?.startsWith('it')?'it':'en':'it');
+StoI18n.setLanguage('en');
 StoI18n.applyStatic();$('language').value=StoI18n.language;
 $('view').value='garage';
 const labels={single:'Valore',same:'Uguale',changed:'≠ Diverso','only-a':'Solo in A','only-b':'Solo in B'};
@@ -14,17 +14,6 @@ function cell(row,text,cls=''){const td=document.createElement('td');td.textCont
 function block(parent,text,cls){const div=document.createElement('div');div.textContent=text;div.className=cls;parent.append(div);return div;}
 function units(){return $('units').value||'metric';}
 function referenceCar(){return state.a&&state.b?(state.a.car===state.b.car?state.a.car:''):(state.a||state.b)?.car||'';}
-
-// Car profile lookup from decoded STO files
-function carProfile(carId){
-  if(typeof STO_CAR_PROFILES==='undefined'||!STO_CAR_PROFILES.cars)return null;
-  const key=carId.replace(/\\/g,'_');
-  return STO_CAR_PROFILES.cars[key]||null;
-}
-function carLabel(name){
-  if(typeof STO_CAR_PROFILES==='undefined'||!STO_CAR_PROFILES.fieldLabels)return null;
-  return STO_CAR_PROFILES.fieldLabels[name]||null;
-}
 
 function resetGarageHelp(){
   $('garage-help').hidden=true;
@@ -46,9 +35,11 @@ function fieldHelp(parent,name){
   const info=StoGarage.explain(name,referenceCar());if(!info)return;
   const details=document.createElement('details');details.className='field-help';
   const summary=document.createElement('summary');summary.textContent=T('Che cosa significa · manuale NextGen');details.append(summary);
-  block(details,info.title,'secondary');block(details,info.description,'help');block(details,info.source+' · '+T('pagina {n}',{n:info.page}),'field-source');block(details,info.qualification,'field-source');parent.append(details);
+  block(details,info.title,'secondary');block(details,info.description,'help');block(details,info.source+' · '+T('pagina {n}',{n:info.page}),'field-source');  block(details,info.qualification,'field-source');parent.append(details);
 }
 let garagePage='all';
+let nativeLayout='garage',nativeLayoutPage=null,lastGaragePage='all';
+const nativeLayoutNames={garage:'Garage',blackbox:'Black box',dash:'Dash'};
 const garagePages={all:'Tutte le regolazioni',tires:'Pneumatici',chassis:'Telaio',aero:'Aerodinamica',drivetrain:'Trasmissione',electronics:'Elettronica',fuel:'Motore e carburante',other:'Altri parametri',notes:'Note'};
 function useModelLayout(){return typeof StoModelLayout!=='undefined'&&!StoGarage.isNextGen(referenceCar());}
 function syncGaragePages(){
@@ -97,28 +88,6 @@ function renderSdkGarage(grid){
     $('garage-alert').hidden=false;$('garage-alert').textContent=error.message;
   }
 }
-function renderNativeExport(grid){
-  const plan=StoNativeExport.plan(nativeExport,garagePage);
-  grid.className='garage-grid garage-sdk garage-model garage-export';
-  $('garage-file-name').textContent=plan.metadata.car+' · '+plan.metadata.setupName;
-  $('garage-source').textContent='HTML · '+plan.metadata.track;
-  $('garage-caption').textContent=T('Fonte: export HTML iRacing · etichette, ordine e valori del file · nessuna associazione automatica allo STO.');
-  if(garagePage==='notes'){
-    grid.hidden=true;$('garage-notes-content').hidden=false;
-    const note=document.createElement('pre');note.textContent=plan.notes||T('Nessuna nota.');$('garage-notes-content').append(note);return;
-  }
-  for(const section of plan.sections){
-    if(section.domain==='notes')continue;
-    const card=document.createElement('section');card.className='garage-card garage-'+section.key;
-    const heading=document.createElement('h2');heading.textContent=section.title;card.append(heading);
-    for(const row of section.rows){
-      const entry=document.createElement('div');entry.className='garage-entry sdk-entry';entry.setAttribute('data-export-path',row.path);
-      block(entry,row.label,'garage-label');const values=document.createElement('div');values.className='garage-values';
-      const value=document.createElement('div');value.className='garage-value';block(value,row.value,'primary');values.append(value);entry.append(values);card.append(entry);
-    }
-    grid.append(card);
-  }
-}
 function renderGarage(rows){
   resetGarageHelp();
   $('garage-load-a').textContent='My Setups · A';$('garage-load-b').textContent=T('Apri il secondo setup');$('garage-clear-a').textContent=T('Rimuovi A');$('garage-clear-b').textContent=T('Rimuovi B');
@@ -126,6 +95,7 @@ function renderGarage(rows){
   $('garage-metric').disabled=garageSource!=='sto';
   if(garageSource!=='sto')$('garage-metric').textContent=T(garageSource==='sdk'?'Unità originali SDK':'Unità originali export');
   $('garage-return-sto').hidden=garageSource==='sto';
+  for(const tab of $('garage-tabs').querySelectorAll('button'))tab.disabled=false;
   const actionPanel=$('garage-file-actions');
   const addAction=(id,label,disabled=true,parent=actionPanel)=>{let button=$(id);if(!button){button=document.createElement('button');button.id=id;button.type='button';}if(button.parentElement!==parent)parent.append(button);button.textContent=label;button.disabled=disabled;return button;};
   addAction('garage-official','Official Setups');addAction('garage-shared','Shared Setups');
@@ -137,7 +107,7 @@ function renderGarage(rows){
   grid.className='garage-grid garage-page-'+garagePage+(pair?' comparing':'');
   $('garage-window').hidden=$('view').value!=='garage';
   $('garage-alert').hidden=!sdkError&&!Object.values(errors).some(Boolean);
-  $('garage-alert').textContent=[...['a','b'].filter(side=>errors[side]).map(side=>T(messages[side].key,messages[side].args)),sdkError].filter(Boolean).join('\n');
+  $('garage-alert').textContent=[...['a','b'].filter(side=>errors[side]).map(side=>{const alertArgs={...messages[side].args};if(alertArgs.error)alertArgs.error=StoI18n.error(alertArgs.error);return T(messages[side].key,alertArgs);}),sdkError].filter(Boolean).join('\n');
   if(garageSource==='sto'&&!$('notice').hidden){
     $('garage-alert').textContent=[$('garage-alert').textContent,$('notice').textContent].filter(Boolean).join('\n');
     $('garage-alert').hidden=false;
@@ -148,8 +118,12 @@ function renderGarage(rows){
   for(const page of Object.keys(garagePages))$('garage-'+page).setAttribute('aria-pressed',String(garagePage===page));
   const notesView=$('garage-notes-content');notesView.hidden=garagePage!=='notes';notesView.replaceChildren();
   $('garage-source').textContent=['a','b'].filter(side=>state[side]).map(side=>side.toUpperCase()+': '+state[side].name).join('  /  ');
+
+
+
+
+
   if(garageSource==='sdk'){renderSdkGarage(grid);return;}
-  if(garageSource==='native-export'){renderNativeExport(grid);return;}
   if(garagePage==='notes'){
     grid.hidden=true;
     for(const side of ['a','b'])if(state[side]){
@@ -160,12 +134,24 @@ function renderGarage(rows){
     $('garage-caption').textContent=T('Note originali dei setup aperti · sola lettura.');return;
   }
   if(state.a||state.b){
+    if(garagePage!==lastGaragePage){nativeLayout='garage';nativeLayoutPage=null;lastGaragePage=garagePage;}
     const native=typeof StoNativeGarage==='undefined'?{status:'fallback',code:'no-profile'}:
       StoNativeGarage.render(typeof STO_NATIVE_GARAGE_CATALOG==='undefined'?null:STO_NATIVE_GARAGE_CATALOG,state.a||state.b,
-        {units:units(),page:garagePage,comparing:pair,filtered:Boolean($('search').value.trim()||$('group').value||$('diff-only').checked)});
+        {units:units(),page:nativeLayout==='garage'?garagePage:nativeLayoutPage,layout:nativeLayout,comparing:pair,filtered:Boolean($('search').value.trim()||$('group').value||$('diff-only').checked)});
     if(native.status==='rendered'){
       grid.className='garage-grid garage-native';grid.setAttribute('style','display:block;overflow-x:auto;');
       const style=document.createElement('style');style.textContent=native.page.css;grid.append(style);
+      const nativeBar=document.createElement('div');nativeBar.className='garage-native-tabs';nativeBar.setAttribute('aria-label','Layout garage');
+      const nativeTab=(label,active,handler)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.setAttribute('aria-pressed',String(active));b.addEventListener('click',handler);nativeBar.append(b);};
+      for(const [key,info] of Object.entries(native.layouts||{})){
+        const firstPage=info.tabs?Object.keys(info.tabs)[0]:null;
+        nativeTab(nativeLayoutNames[key]||key,nativeLayout===key,()=>{nativeLayout=key;nativeLayoutPage=firstPage;render();});
+      }
+      if(native.layoutTabs)for(const [slug,name] of Object.entries(native.layoutTabs)){
+        const active=nativeLayout==='garage'?garagePage===slug||(garagePage==='all'&&native.page.activeTab===Object.keys(native.layoutTabs).indexOf(slug)):nativeLayoutPage===slug;
+        nativeTab(name,active,()=>{if(nativeLayout==='garage')garagePage=slug;else nativeLayoutPage=slug;render();});
+      }
+      grid.append(nativeBar);
       const surface=document.createElement('div');surface.innerHTML=native.page.html;grid.append(surface);
       $('garage-caption').textContent=T('Posizioni e formati dal profilo garage verificato · sola lettura.');
       return;
@@ -295,7 +281,7 @@ function render(){
   for(const side of ['a','b']){
     const s=state[side];$('meta-'+side).className='meta'+(errors[side]?' error':'');
     const message=messages[side],args={...message.args};if(args.error)args.error=StoI18n.error(args.error);
-    const cp=carProfile(s?.car||'');
+    const cp=null;
     $('meta-'+side).textContent=s?s.name+'\n'+StoPresentation.carName(s.car)+(cp?' · '+cp.fieldCount+' campi noti':'')+'\n'+T('{n} parametri · {groups} aree\nModello interno: {car}',{n:s.entries.length,groups:new Set(s.entries.map(e=>StoPresentation.describe(e.name).group)).size,car:s.car}):T(message.key,args);
     $('raw-'+side).textContent=s?T('File: {name}\nModello: {car}\nSTO v{version} · contenuto v{content} · coda {tail} byte\nSHA-256: {hash}',{name:s.name,car:s.car,version:s.version,content:s.contentVersion,tail:s.tailSize,hash:s.sha256})+'\n\n'+s.text:'—';
     $('head-'+side).textContent='Setup '+side.toUpperCase()+(s?' · '+s.name:'');
@@ -306,18 +292,20 @@ function render(){
   for(const side of ['a','b'])if(state[side]?.entries.some(e=>e.occurrence>1))notes.push(T('Setup {side}: nomi di parametro ripetuti. Il confronto abbina le occorrenze nell’ordine del file.',{side:side.toUpperCase()}));
   if(state.a&&state.b&&state.a.notes!==state.b.notes) notes.push(T('Le note dei due setup sono diverse: apri la scheda NOTES del garage per leggerle.'));
   $('notice').hidden=!notes.length;$('notice').textContent=notes.join('\n');
-  $('diff-only').disabled=!(state.a&&state.b);for(const id of ['export','report','print'])$(id).disabled=!(state.a||state.b);
+  $('diff-only').disabled=!(state.a&&state.b);for(const id of ['export','print'])$(id).disabled=!(state.a||state.b);
   $('tablebox').className='tablebox'+($('originals').checked?'':' originals-off');
   const completeRows=allRows(),counts={};completeRows.forEach(r=>counts[r.status]=(counts[r.status]||0)+1);
   renderOverview(completeRows,counts);
+
+
   syncGaragePages();
   const rows=visibleRows(),tableView=$('view').value!=='garage';$('rows').replaceChildren();let currentGroup;
   if(tableView)for(const r of rows){
     const d=r.description;
     if(($('sort').value||'group')==='group'&&currentGroup!==d.group){const header=document.createElement('tr');header.className='group-row';const td=cell(header,T(d.group));td.colSpan=5;$('rows').append(header);currentGroup=d.group;}
     const tr=document.createElement('tr');tr.className=r.status;
-    const cl=carLabel(r.name);
-    const nameCell=cell(tr,'','parameter');block(nameCell,(cl||d.label)+(r.occurrence>1?' · '+T('occorrenza {n}',{n:r.occurrence}):''),'primary');block(nameCell,r.name,'technical');if(d.partial&&!cl)block(nameCell,T('Etichetta parziale · significato da verificare'),'secondary');nameCell.title=(cl?cl+' · ':'')+d.quality+'\n'+d.unitEvidence;block(nameCell,r.name,'technical');if(d.partial)block(nameCell,T('Etichetta parziale · significato da verificare'),'secondary');nameCell.title=d.quality+'\n'+d.unitEvidence;
+    const cl=null;
+    const nameCell=cell(tr,'','parameter');block(nameCell,(cl||d.label)+(r.occurrence>1?' · '+T('occorrenza {n}',{n:r.occurrence}):''),'primary');block(nameCell,r.name,'technical');if(d.partial&&!cl)block(nameCell,T('Etichetta parziale · significato da verificare'),'secondary');nameCell.title=(cl?cl+' · ':'')+d.quality+'\n'+d.unitEvidence;
     fieldHelp(nameCell,r.name);
     for(const side of ['a','b']){const entry=r[side],formatted=StoPresentation.format(entry?.value,d,units()),td=cell(tr,'','value');block(td,formatted.primary,'primary');block(td,formatted.secondary,'secondary');if(entry)block(td,T('Originale: {value} · riga {line}',{value:entry.value,line:entry.line}),'technical raw-value');}
     const delta=state.a&&state.b?StoPresentation.delta(r.a?.value,r.b?.value,d,units()):{primary:'—',detail:T('Aggiungi il secondo setup per confrontare')};
@@ -329,8 +317,8 @@ function render(){
   if($('view').value==='garage')renderGarage(rows);else {$('garage-grid').replaceChildren();$('garage-notes-content').hidden=true;$('garage-tools').hidden=true;}
   $('stats').textContent=state.a&&state.b?T('{changed} diversi · {a} solo in A · {b} solo in B · {same} uguali · {visible} visibili',{changed:counts.changed||0,a:counts['only-a']||0,b:counts['only-b']||0,same:counts.same||0,visible:rows.length}):state.a||state.b?T('{n} parametri visibili',{n:rows.length}):T('Apri un setup per iniziare.');
   $('print-heading').textContent=[T('STO Reader 0.4 — risultati filtrati'),state.a?'A: '+state.a.name+' · '+state.a.car:'',state.b?'B: '+state.b.name+' · '+state.b.car:'',T('Filtri: {filters}',{filters:filterSummary()})].filter(Boolean).join('\n');
-  for(const id of ['units','metric-check','search','group','sort','originals','swap','export','report','print','view']){
-    const ordinaryDisabled=['export','report','print'].includes(id)&&!(state.a||state.b);
+  for(const id of ['units','metric-check','search','group','sort','originals','swap','export','print','view']){
+    const ordinaryDisabled=['export','print'].includes(id)&&!(state.a||state.b);
     $(id).disabled=garageSource!=='sto'||ordinaryDisabled;
   }
   $('diff-only').disabled=garageSource!=='sto'||!(state.a&&state.b);
@@ -345,7 +333,7 @@ function render(){
 }
 async function load(side,file){
   if(!file)return;sdkGeneration++;garageSource='sto';sdkError='';const ticket=++generation[side];state[side]=null;errors[side]=false;messages[side]={key:'Lettura di {name}…',args:{name:file.name}};render();
-  try{if(file.size>16*1024*1024)throw new Error('File troppo grande: limite 16 MiB.');const result=await StoReader.decode(await file.arrayBuffer(),MATERIAL);if(ticket!==generation[side])return;state[side]={...result,name:file.name};render();}
+  try{if(file.size>16*1024*1024)throw new Error('File troppo grande: limite 16 MiB.');const result=await StoReader.decode(await file.arrayBuffer(),MATERIAL);if(ticket!==generation[side])return;state[side]={...result,name:file.name,synthetic:/^SYNTHETIC/i.test(file.name)};render();}
   catch(error){if(ticket!==generation[side])return;errors[side]=true;messages[side]={key:'Impossibile aprire {name}\n{error}',args:{name:file.name,error:error.message}};render();}
 }
 const demoBytes=sample=>Uint8Array.from(atob(sample.base64),char=>char.charCodeAt(0));
@@ -397,18 +385,7 @@ $('garage-sdk-file').addEventListener('change',async event=>{
     const snapshot=JSON.parse(text);StoSdkGarage.validate(snapshot);StoSdkGarage.plan(snapshot,'chassis');
     if(ticket!==sdkGeneration)return;
     sdkSnapshot=snapshot;garageSource='sdk';garagePage='chassis';sdkError='';$('view').value='garage';render();
-  }catch(error){if(ticket!==sdkGeneration)return;sdkError=T('Impossibile importare lo snapshot SDK: {error}',{error:error.message});render();}
-});
-$('garage-load-native-export').addEventListener('click',()=>$('garage-native-export-file').click());
-$('garage-native-export-file').addEventListener('change',async event=>{
-  const file=event.target.files[0];event.target.value='';if(!file)return;const ticket=++sdkGeneration;
-  try{
-    if(file.size>1024*1024)throw new Error(T('Export troppo grande: limite 1 MiB.'));
-    const text=new TextDecoder('utf-8',{fatal:true}).decode(await file.arrayBuffer());
-    const parsed=StoNativeExport.parse(text);StoNativeExport.plan(parsed,'all');
-    if(ticket!==sdkGeneration)return;
-    nativeExport=parsed;garageSource='native-export';garagePage='all';sdkError='';$('view').value='garage';render();
-  }catch(error){if(ticket!==sdkGeneration)return;sdkError=T('Impossibile importare export HTML: {error}',{error:error.message});render();}
+  }catch(error){if(ticket!==sdkGeneration)return;sdkError=T('Impossibile importare lo snapshot SDK: {error}',{error:StoI18n.error(error.message)});render();}
 });
 $('garage-return-sto').addEventListener('click',()=>{sdkGeneration++;garageSource='sto';sdkError='';garagePage='chassis';render();});
 for(const page of Object.keys(garagePages))$('garage-'+page).addEventListener('click',()=>{garagePage=page;render();});
@@ -428,30 +405,10 @@ function csvContent(){
   return '\ufeff'+records.map(row=>row.map(quote).join(';')).join('\r\n');
 }
 function filterSummary(){return T('Area: {group} · ricerca: {search} · {mode} · unità: {units} · ordine: {order}',{group:T($('group').value||'tutte'),search:$('search').value||T('nessuna'),mode:T($('diff-only').checked&&state.a&&state.b?'solo differenze':'tutti i valori'),units:T(units()),order:T($('sort').value||'group')})+($('view').value==='garage'?' · '+T('VISTA')+': '+T(garagePages[garagePage]):'');}
-function reportContent(){
-  const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const rows=visibleRows();
-  const originals=$('originals').checked;
-  const table=rows.map(r=>{
-    const d=r.description,value=side=>{
-      const entry=r[side];if(!entry)return '—';
-      return escape(StoPresentation.format(entry.value,d,units()).primary)+(originals?'<small>'+escape(T('Originale: {value} · riga {line}',{value:entry.value,line:entry.line}))+'</small>':'');
-    };
-    const delta=state.a&&state.b?StoPresentation.delta(r.a?.value,r.b?.value,d,units()):{primary:'—',detail:''};
-    return '<tr class="'+r.status+'"><td>'+escape(T(d.group))+'</td><td>'+escape(d.label)+(r.occurrence>1?' · '+escape(T('occorrenza {n}',{n:r.occurrence})): '')+'<small>'+escape(r.name)+'</small></td><td>'+value('a')+'</td><td>'+value('b')+'</td><td>'+escape(delta.primary)+(originals&&r.status==='changed'?'<small>'+escape(delta.detail)+'</small>':'')+'</td><td>'+escape(T(labels[r.status]))+'</td></tr>';
-  }).join('');
-  const sources=['a','b'].filter(side=>state[side]).map(side=>{
-    const s=state[side];return '<section><h2>Setup '+side.toUpperCase()+': '+escape(s.name)+'</h2><p>'+escape(s.car)+'</p><small>'+escape(T('SHA-256 file'))+': '+escape(s.sha256)+'</small>'+($('include-notes').checked?'<h3>'+escape(T('Note'))+'</h3><pre>'+escape(s.notes||T('Nessuna nota.'))+'</pre>':'')+'</section>';
-  }).join('');
-  const style='body{font:14px system-ui;margin:30px;color:#152638}h1{font-size:28px}h2{font-size:17px}p{line-height:1.7;white-space:pre-line}small{display:block;font-size:11px;color:#536477;overflow-wrap:anywhere;margin-top:5px}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:10px;border:1px solid #ccd6df;vertical-align:top}th{background:#edf2f6}.changed{background:#fff1d7}.only-a,.only-b{background:#e5f2fa}pre{white-space:pre-wrap;overflow-wrap:anywhere}section{margin:20px 0}.table{overflow:auto}@media print{body{margin:0;font-size:9pt}th,td{padding:5px}tr{break-inside:avoid}thead{display:table-header-group}}';
-  const headers=['Area','Parametro','Setup A','Setup B','Δ B − A','Stato'].map(key=>'<th>'+escape(T(key))+'</th>').join('');
-  return '<!doctype html><html lang="'+StoI18n.language+'"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; style-src \'unsafe-inline\'; base-uri \'none\'; form-action \'none\'"><title>'+escape(T('Report confronto setup'))+'</title><style>'+style+'</style><h1>'+escape(T('Report setup · STO Reader 0.4'))+'</h1><p>'+escape(filterSummary())+'<br>'+escape(T('{n} parametri visibili. Δ = B − A.',{n:rows.length}))+'</p>'+sources+'<p>'+escape($('summary-detail').textContent)+'</p><p>'+escape(T('Etichette interpretate dai nomi tecnici; unità dal suffisso del campo, equivalenza con il garage non verificata. Indici e impostazioni sono codici interni. La coda binaria non è interpretata.'))+'</p>'+($('notice').hidden?'':'<p>'+escape($('notice').textContent)+'</p>')+'<div class="table"><table><thead><tr>'+headers+'</tr></thead><tbody>'+table+'</tbody></table></div><p>'+escape(T('Report statico generato localmente. Contiene risultati dei setup selezionati; nessun decoder, nessuna costante di decodifica. Non consente di aprire altri setup.'))+'</p></html>';
-}
 function download(content,type,filename){
   const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),anchor=document.createElement('a');anchor.href=url;anchor.download=filename;anchor.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 $('export').addEventListener('click',()=>download(csvContent(),'text/csv;charset=utf-8','confronto-setup.csv'));
-$('report').addEventListener('click',()=>download(reportContent(),'text/html;charset=utf-8','report-setup.html'));
 $('print').addEventListener('click',()=>globalThis.print());
 globalThis.addEventListener?.('error',()=>{const box=$('boot-error');box.hidden=false;box.textContent=T('Si è verificato un errore nell’interfaccia. Riapri il file HTML completo; se ricompare, segnala il messaggio della console e la versione 0.4.');});
 render();
