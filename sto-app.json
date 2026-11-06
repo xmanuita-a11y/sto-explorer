@@ -1,12 +1,12 @@
 {
   "name": "STO Explorer",
-  "version": "1.0.0-rc.3",
+  "version": "1.0.0-rc.4",
   "supported_sto_headers": [
     3
   ],
   "languages": [
-    "it",
-    "en"
+    "en",
+    "it"
   ],
   "release_status": "experimental_release_candidate"
 }

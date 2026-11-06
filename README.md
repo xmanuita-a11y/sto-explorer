@@ -1,81 +1,51 @@
 # STO Explorer
 
+[![Build verification](https://github.com/xmanuita-a11y/sto-explorer/actions/workflows/build.yml/badge.svg)](https://github.com/xmanuita-a11y/sto-explorer/actions/workflows/build.yml)
+![Offline](https://img.shields.io/badge/Offline-single_HTML-2563eb)
+![Processing](https://img.shields.io/badge/Processing-local_only-15803d)
+![Read only](https://img.shields.io/badge/Setup_files-read_only-15803d)
+![Native profiles](https://img.shields.io/badge/Native_profiles-3_cars-c79a32)
+![Languages](https://img.shields.io/badge/Languages-EN_%2F_IT-6366f1)
+[![MIT](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
+
 **English** · [Italiano](README.it.md) · [Changelog](CHANGELOG.md)
 
-[![Build verification](https://github.com/xmanuita-a11y/sto-explorer/actions/workflows/build.yml/badge.svg)](https://github.com/xmanuita-a11y/sto-explorer/actions/workflows/build.yml)
+A standalone, read-only viewer for iRacing STO v3 setup files. Release candidate **1.0.0-rc.4**.
 
-A standalone, read-only browser tool for inspecting and comparing iRacing setup files. Built with vanilla JavaScript, WebCrypto and a dependency-free Python build script.
+Download `STO_Reader_Offline.html` and open it in a current Edge, Chrome or Firefox browser. English is the default; the language selector is always at the top right. Open a setup or try the synthetic examples. No server, account, running simulator or installation is required.
 
-**Experimental release candidate.** Supports observed STO v3 containers. Model-aware reference layouts are available; a complete native Garage replica and simulator validation are outside the current release.
+## What it shows
 
-This is an independent project, not affiliated with, endorsed by or supported by iRacing. Third-party names and trademarks belong to their respective owners.
+- Original parameter values, technical names, notes and unparsed lines.
+- A second independent Garage alongside the first.
+- Native layout reconstructions for exact Camry NextGen, Ferrari 296 GT3 and Porsche 963 GTP identities and supported content versions.
+- Explicit unit conversions. Missing simulator outputs remain unavailable; unknown codes retain their original values.
+- A reference layout with original-value details for other cars. A shared field name does not establish shared physics or Garage limits.
 
-## Try it locally
+Only the Garage is shown. There are no A/B differences, comparison tables, Black Box, Dash or In-car views. Each open setup has its own Garage tabs and units. On smaller screens the two Garages stack vertically. Original values remain in a collapsed details panel inside each Garage.
 
-1. Download [STO_Reader_Offline.html](STO_Reader_Offline.html) using GitHub's **Download raw file** action.
-2. Open it in a current Chrome, Edge or Firefox browser.
-3. Choose **Synthetic demo → Open demo comparison** at the top of the Garage, or load one or two files you are authorized to use.
+## Privacy
 
-The Camry NextGen, Acura GTP and Ferrari GT3 examples use invented values and one deliberate A/B pressure difference. They demonstrate the viewer and are not usable or recommended simulator setups.
+Selected files are processed in browser memory. The viewer uploads nothing, uses no analytics or accounts, and never modifies setup files. Original values are displayed only for the setup opened in that Garage.
 
-No installation, server, account, network connection or running simulator is required for the viewer. Selected files are processed locally; the app does not upload them or modify the original setups.
+The release tree contains synthetic demos and normalized compatibility metadata. It excludes personal setups, captured session data, memory dumps, archive keys, raw simulator resources and machine-specific paths. A Content Security Policy disables application network connections. Hosting providers can still receive ordinary page requests when visiting a hosted copy.
 
-## Features
+## Build and verification
 
-- **A/B comparison:** exact decimal differences, search, change-only filtering and per-field provenance.
-- **Model-aware reference panels:** wheel, axle, heave, third and central suspension, aerodynamics, drivetrain, electronics and fuel.
-- **Structural coverage:** 53 model/content-version identities, 89 global field schemas and 98 model/schema combinations. Matching field names do not imply equivalent vehicle behavior.
-- **Separate observations:** optional SDK JSON snapshots and the supported HTML setup-export subset retain their own values, units and notes.
-- **Local result exports:** CSV, printable HTML and bilingual English/Italian presentation.
-- **Read-only design:** no setup writing, simulator control or technical-inspection claims.
-
-In **Compare and offline tools**, choose **Open iRacing HTML export** to inspect a supported exported document. Its values remain separate from any STO files already open.
-
-## Engineering approach
-
-The project separates byte decoding, original parameter values, reference presentation and externally supplied observations. Unknown values retain their technical names and original codes; missing simulator outputs are not synthesized.
-
-| Component | Responsibility |
-| --- | --- |
-| [Reader](sto-reader-core.js) | Bounded STO parsing, source hashes, duplicate-field identity and exact comparison |
-| [Presentation](sto-reader-presentation.js) | Explicit decimal formatting and qualified field descriptions |
-| [Model layout](sto-model-layout.js) | Reference grouping without inheriting another model's control semantics |
-| [HTML export reader](sto-native-export.js) | Inert-text parsing of the supported export subset |
-| [SDK view](sto-sdk-garage.js) | Display of separately imported session observations |
-| [Builder](build_sto_reader.py) | Reproducible, self-contained HTML without external dependencies |
-
-## Build
-
-Requires Python 3.10 or later. No pip or npm packages are needed.
+Python 3.10+ builds the standalone file without packages:
 
 ```sh
 python build_sto_reader.py
 ```
 
-The build embeds the reviewed sources, catalogs and synthetic demo data into the standalone HTML. The public workflow verifies the build, source syntax and synthetic demo decoding, hashes, ordered field identities and exact A/B differences on Linux and Windows. Tests, development fixtures, local audit reports and session data are intentionally kept outside the public repository.
-
-## Optional SDK capture
-
-On Windows, with a suitable session already running:
+Python 3.10+ and Node.js 18+ run the public synthetic checks, source syntax and release privacy scan:
 
 ```sh
-python capture_iracing_garage_sdk.py
+python run_tests.py
 ```
 
-The optional helper reads the public SDK shared mapping and writes each acquisition to a new, excluded local directory. It does not open a simulator process handle or inject code. Import the resulting snapshot through the viewer's offline tools. Captures can contain setup and session details; review them before sharing.
+Optional browser verification uses Playwright (`node test_browser.cjs`). It checks file loading, two independent Garages, tabs, units and errors using synthetic values only.
 
-## Scope and limitations
+Public builds need no private archive, source extraction, account or setup directory. The normalized metadata snapshot records source hashes for provenance. Hashes identify bytes; they do not certify complete Garage equivalence. The native view is read-only and incomplete: conditional limits, engine calculations and some layout details remain in [TODO.md](TODO.md).
 
-- Compatibility is limited to observed file variants; future updates may change the format.
-- Reference layouts and name-based unit conversions are qualified interpretations, not verified native control catalogs.
-- The distributed native-profile catalog is empty. No complete ranges, enums, setup physics or technical-inspection results are provided.
-- SHA-256 identifies file bytes; it does not establish authorship, authenticity or simulator acceptance.
-- Processing remains on the browser's main thread. Input budgets reduce resource use but are not an assurance against every hostile input.
-
-See [Security](SECURITY.md), [Contributing](CONTRIBUTING.md) and [Project status](PROGRESS.md) for the verification boundary and remaining work.
-
-## Privacy and license
-
-Only explicitly allowlisted application sources, sanitized documentation and embedded synthetic demo data are published. Personal/commercial setups, captures, tests, logs, workstation paths and internal investigation materials are excluded.
-
-Original project code is available under the [MIT License](LICENSE). This grants no rights in third-party products, services, trademarks or materials; see [Third-party notices](THIRD_PARTY_NOTICES.md). Use only files you are authorized to access and respect applicable terms.
+Independent project, not affiliated with or endorsed by iRacing. MIT covers original project code; see [third-party notices](THIRD_PARTY_NOTICES.md).

@@ -14,10 +14,12 @@
 !/sto-native-generator.js
 !/sto-native-formatter.js
 !/sto-native-renderer.js
+!/sto-native-reconstruction.js
 !/sto-native-garage.js
 !/sto-sdk-garage.js
 !/sto-native-export.js
 !/sto-native-garage-catalog.json
+!/sto-native-car-reconstruction.json
 !/sto-reader-material.json
 !/sto-app.json
 !/sto-locales-en.json
@@ -29,6 +31,8 @@
 !/sto-model-layout.js
 !/sto-car-profiles.json
 !/sto-field-garage-mapping.json
+!/sto-native-label-dictionary.json
+!/sto-official-text.json
 !/README.md
 !/README.en.md
 !/README.it.md
@@ -44,3 +48,11 @@
 !/.github/
 !/.github/workflows/
 !/.github/workflows/build.yml
+
+!/run_tests.py
+!/test_*.cjs
+!/sto-test-fixtures.cjs
+!/TODO.md
+!/verify_release.py
+
+!/.gitattributes

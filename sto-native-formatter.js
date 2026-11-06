@@ -49,16 +49,19 @@ const StoNativeFormatter = (() => {
   }
   function printfSubset(format, value, type) {
     if(typeof format!=='string')return unsupported('Missing selected format');
-    // Literal %% plus one unadorned %d, %f, or %.0f..%.9f conversion only.
+    // Literal %% plus one optional + flag and one %d, %f, or %.0f..%.9f conversion only.
+    // The + flag is supported because the target's own recovered format strings use it
+    // (e.g. %+.0f deg, %+.0f mm, %+.0f/32\", %+.1f deg in local.cro declarations).
     const escaped=format.replace(/%%/g,'\u0000');
     // printf accepts an empty/literal format even when an unused argument is passed.
     if(!escaped.includes('%'))return {status:'ok',text:escaped.replace(/\u0000/g,'%')};
-    const matches=[...escaped.matchAll(/%(?:\.(\d))?([df])/g)];
+    const matches=[...escaped.matchAll(/%(?:\+)?(?:\.(\d))?([df])/g)];
     if(matches.length!==1)return unsupported('CRT format outside supported subset');
     const m=matches[0], remainder=escaped.slice(0,m.index)+escaped.slice(m.index+m[0].length);
     if(remainder.includes('%') || (type===1 && m[2]!=='d') || (type===0 && m[2]!=='f') || (m[2]==='d'&&m[1]!=null))
       return unsupported('Format conversion does not match reconstructed argument type');
-    const text=m[2]==='d'?String(value):fixedEven(value,m[1]==null?6:Number(m[1]));
+    let text=m[2]==='d'?String(value):fixedEven(value,m[1]==null?6:Number(m[1]));
+    if(m[0].startsWith('%+') && !text.startsWith('-'))text='+'+text;
     return {status:'ok', text:(escaped.slice(0,m.index)+text+escaped.slice(m.index+m[0].length)).replace(/\u0000/g,'%')};
   }
   function format(record, options={}) {

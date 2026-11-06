@@ -1,6 +1,6 @@
 /* Local catalogs only. No remote translation, locale downloads or file storage. */
 const StoI18n = (() => {
-  let language='it';
+  let language='en';
   const missing=new Set();
   const en=typeof STO_EN_CATALOG==='undefined'?{}:STO_EN_CATALOG;
   function t(source,values={}){
