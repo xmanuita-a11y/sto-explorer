@@ -1,5 +1,13 @@
 # STO Explorer
 
+[![Build verification](https://github.com/xmanuita-a11y/sto-explorer/actions/workflows/build.yml/badge.svg)](https://github.com/xmanuita-a11y/sto-explorer/actions/workflows/build.yml)
+![Offline](https://img.shields.io/badge/Offline-single_HTML-2563eb)
+![Processing](https://img.shields.io/badge/Processing-local_only-15803d)
+![Read only](https://img.shields.io/badge/Setup_files-read_only-15803d)
+![Native profiles](https://img.shields.io/badge/Native_profiles-3_cars-c79a32)
+![Languages](https://img.shields.io/badge/Languages-EN_%2F_IT-6366f1)
+[![MIT](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
+
 [English](README.md) · **Italiano** · [Changelog](CHANGELOG.md)
 
 Visualizzatore offline in sola lettura dei setup iRacing STO v3. Release candidate **1.0.0-rc.4**.
