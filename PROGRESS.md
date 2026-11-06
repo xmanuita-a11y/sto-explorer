@@ -6,3 +6,5 @@
 - HTML import/report flows removed. English default and visible top-right language control.
 - Synthetic container, formatter, renderer, model layout and release regression checks shipped with the repository.
 - Simulator-side validation remains open; see TODO.md. No claim of complete Garage replication or simulator acceptance.
+
+- Garage-only UI: independent adjacent setup panes, no comparison controls or bottom comparison drawer, no Black Box/Dash/In-car/SDK views. Browser regression covers isolation of tabs, units and errors.

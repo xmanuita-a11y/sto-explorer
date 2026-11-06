@@ -1,6 +1,10 @@
 # Changelog
 
-## 1.0.0-rc.4 — 2026-11-05
+## 1.0.0-rc.4 — 2026-11-06
+
+- Focus the interface on Garage only; remove the comparison drawer and A/B operations.
+- Open a second setup in an independent adjacent Garage with its own tabs and units.
+- Remove Black Box, Dash, In-car and SDK views; retain original values inside each Garage.
 
 - Remove HTML setup import and HTML report export.
 - Default to English and keep language selection at the top right.

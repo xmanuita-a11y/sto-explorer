@@ -32,7 +32,7 @@ if native_catalog.get('schemaVersion') != 1 or not isinstance(native_catalog.get
     raise ValueError('Invalid native garage catalog')
 native = '\n'.join((root/name).read_text(encoding='utf-8') for name in (
     'sto-native-generator-extra.js', 'sto-native-generator.js', 'sto-native-formatter.js',
-    'sto-native-renderer.js', 'sto-native-garage.js', 'sto-sdk-garage.js'))
+    'sto-native-renderer.js', 'sto-native-garage.js'))
 native_catalog_js = json.dumps(native_catalog).replace('<', '\\u003c').replace('>', '\\u003e').replace('&', '\\u0026')
 material = json.loads((root/'sto-reader-material.json').read_text())
 demo = json.loads((root/'sto-demo-data.json').read_text())

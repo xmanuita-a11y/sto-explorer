@@ -9,16 +9,16 @@ Download `STO_Reader_Offline.html` and open it in a current Edge, Chrome or Fire
 ## What it shows
 
 - Original parameter values, technical names, notes and unparsed lines.
-- Exact decimal A/B comparison, search, filters, CSV export and printing.
+- A second independent Garage alongside the first.
 - Native layout reconstructions for exact Camry NextGen, Ferrari 296 GT3 and Porsche 963 GTP identities and supported content versions.
 - Explicit unit conversions. Missing simulator outputs remain unavailable; unknown codes retain their original values.
-- A reference layout and raw table for other cars. A shared field name does not establish shared physics or Garage limits.
+- A reference layout with original-value details for other cars. A shared field name does not establish shared physics or Garage limits.
 
-HTML setup import and HTML report export have been removed. SDK JSON observations, if imported, remain separate from STO values. Raw values are available in the table and original-content panel even when no native control exists.
+Only the Garage is shown. There are no A/B differences, comparison tables, Black Box, Dash or In-car views. Each open setup has its own Garage tabs and units. On smaller screens the two Garages stack vertically. Original values remain in a collapsed details panel inside each Garage.
 
 ## Privacy
 
-Selected files are processed in browser memory. The viewer uploads nothing, uses no analytics or accounts, and never modifies setup files. CSV and print output can contain the files you opened; share them deliberately.
+Selected files are processed in browser memory. The viewer uploads nothing, uses no analytics or accounts, and never modifies setup files. Original values are displayed only for the setup opened in that Garage.
 
 The release tree contains synthetic demos and normalized compatibility metadata. It excludes personal setups, captured session data, memory dumps, archive keys, raw simulator resources and machine-specific paths. A Content Security Policy disables application network connections. Hosting providers can still receive ordinary page requests when visiting a hosted copy.
 
@@ -36,7 +36,7 @@ Python 3.10+ and Node.js 18+ run the public synthetic checks, source syntax and 
 python run_tests.py
 ```
 
-Optional browser verification uses Playwright (`node test_browser.cjs`). It checks the UI using synthetic values only.
+Optional browser verification uses Playwright (`node test_browser.cjs`). It checks file loading, two independent Garages, tabs, units and errors using synthetic values only.
 
 Public builds need no private archive, source extraction, account or setup directory. The normalized metadata snapshot records source hashes for provenance. Hashes identify bytes; they do not certify complete Garage equivalence. The native view is read-only and incomplete: conditional limits, engine calculations and some layout details remain in [TODO.md](TODO.md).
 

@@ -20,5 +20,8 @@ for(const profile of catalog.profiles){
 const html=fs.readFileSync('STO_Reader_Offline.html','utf8');
 for(const removed of ['id="garage-native-export-file"','id="report"','function reportContent(','StoNativeExport.parse'])assert(!html.includes(removed));
 assert(html.includes("StoI18n.setLanguage('en')"));
-assert(html.indexOf('id="language"')<html.indexOf('id="garage-window"'));
+assert(html.indexOf('id="language"')<html.indexOf('id="garages"'));
 console.log('PASS: conversion regressions, exact vehicle routing, English default, removed HTML flows');
+
+for(const profile of catalog.profiles)assert.deepEqual(Object.keys(profile.layouts),['garage']);
+for(const removed of ['id="diff-only"','id="swap"','id="tablebox"','id="garage-comparison"','nativeLayoutNames','function csvContent('])assert(!html.includes(removed));
