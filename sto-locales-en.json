@@ -553,7 +553,7 @@
   "I CSV esportati contengono risultati dei tuoi setup: scegli tu se condividerli. Il tool completo incorpora la logica di decodifica ed è ispezionabile.": "Exported CSV files contain setup results: choose whether to share them. The complete tool includes an inspectable decoder.",
   "STO Reader 0.4 · STO v3. Nessuna modifica ai setup. Uguaglianza dei parametri non implica uguaglianza di note, metadati o coda binaria. Il tool HTML incorpora il decoder; i CSV esportati contengono solo risultati. Progetto indipendente, non affiliato a iRacing.": "STO Reader 0.4 · STO v3. Setup files are never modified. Equal parameters do not imply equal notes, metadata or binary tails. The HTML tool includes the decoder; CSV exports contain results only. Independent project, not affiliated with iRacing.",
   "Garage · offline · sola lettura": "Garage · offline · read only",
-  "Apri setup": "Open setup",
+  "Apri setup": "Open Setup",
   "Affianca un setup": "Open alongside",
   "Avvio del Garage…": "Starting Garage…",
   "STO Reader 0.4 · Nessun file viene modificato o inviato online. I valori calcolati dal simulatore restano indisponibili.": "STO Reader 0.4 · Files are never modified or uploaded. Simulator-computed values remain unavailable.",
@@ -572,5 +572,9 @@
   "Impossibile aprire il setup: {error}": "Could not open setup: {error}",
   "Errore interfaccia: riapri il file HTML.": "Interface error: reopen the HTML file.",
   "STO Explorer": "STO Explorer",
-  "STO Explorer · Garage": "STO Explorer · Garage"
+  "STO Explorer · Garage": "STO Explorer · Garage",
+  "⚒ Garage": "⚒ Garage",
+  "Salvataggio non disponibile: il Garage è in sola lettura.": "Saving is unavailable: the Garage is read only.",
+  "Errore interfaccia: {error}": "Interface error: {error}",
+  "Errore sconosciuto": "Unknown error"
 }

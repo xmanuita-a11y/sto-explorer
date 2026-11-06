@@ -2,6 +2,9 @@
 
 ## 1.0.0-rc.4 — 2026-11-06
 
+- Avoid ResizeObserver feedback during demo/native layout fitting; use scheduled fitting on render and viewport resize.
+- Restore Garage and Open Setup buttons, with Save visibly disabled in read-only mode.
+
 - Focus the interface on Garage only; remove the comparison drawer and A/B operations.
 - Open a second setup in an independent adjacent Garage with its own tabs and units.
 - Remove Black Box, Dash, In-car and SDK views; retain original values inside each Garage.
